@@ -38,8 +38,11 @@ let ident = take_while1(is_alpha) >>= alphas =>
 let quote = char('`') *> take_while1(is_alpha) >>= alphas =>
   take_while(is_digit) >>| digits => Quote(alphas ++ digits);
 
-/* single character operators */
-let oper = choice(List.map(opers, char)) >>| op => Oper(Char.to_string(op));
+/* 
+ * single character operators. They have no special semantics so we just generate
+ * the Ident type instead of them having their own type
+ */
+let oper = choice(List.map(opers, char)) >>| op => Ident(Char.to_string(op));
 
 /* 0b -> false, 1b - true */
 let boolean = string_ci("1b") <|> string_ci("0b") >>| b =>

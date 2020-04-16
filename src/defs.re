@@ -24,7 +24,6 @@ and parse_val =
 | Float(float)                /* R */
 | Quote(string)               /* Q */
 | Ident(string)
-| Oper(string)
 | Bool(bool)                  /* B */
 | Null                        /* N */
 | Str(string)                 /* S */
@@ -40,7 +39,6 @@ let rec parse_print = x =>
   switch(x) {
   | Int(x)   => Printf.printf("%d ", x);
   | Expr(xs) => List.iter(xs, parse_print)
-  | Oper(x)  => Printf.printf("%s ", x)
   | Quote(x) => Printf.printf("`%s ", x)
   | Null     => Printf.printf("0N ")
   | Fn(xs)   => List.iter(xs, parse_print)

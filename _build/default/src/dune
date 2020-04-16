@@ -1,4 +1,0 @@
-(executable
- (public_name xs)
- (name xs)
- (libraries core angstrom res))
