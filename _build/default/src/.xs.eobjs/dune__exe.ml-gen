@@ -1,0 +1,20 @@
+(** @canonical Dune__exe.Context *)
+module Context = Dune__exe__Context
+
+(** @canonical Dune__exe.Defs *)
+module Defs = Dune__exe__Defs
+
+(** @canonical Dune__exe.Eval *)
+module Eval = Dune__exe__Eval
+
+(** @canonical Dune__exe.Lib *)
+module Lib = Dune__exe__Lib
+
+(** @canonical Dune__exe.Parser *)
+module Parser = Dune__exe__Parser
+
+(** @canonical Dune__exe.Stk *)
+module Stk = Dune__exe__Stk
+
+(** @canonical Dune__exe.Xs *)
+module Xs = Dune__exe__Xs
