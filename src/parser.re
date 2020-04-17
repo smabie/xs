@@ -23,7 +23,7 @@ let sep = char(';') >>| _ => Sep;
 let number = {
   let dot = peek_char >>= fun
   | Some('.') => advance(1) >>| () => true
-  | _         => return(false);
+  | _ => return(false);
   
   take_while1(is_digit) >>= digits => dot >>= fun
   | false => return $ Int(int_of_string(digits))

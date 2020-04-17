@@ -14,8 +14,11 @@ open Stk
 open Lib
 open Context
   
-eval([ctx]) $ parse("3**. 3 2");
+let rec repl = () => {
+  print_string("xs> ");
+  eval([ctx]) $ parse(read_line());
+  Stk.display();
+  repl();
+};
 
-Array.to_list(Stk.stk) |> List.iter(_, fun | Z(x) => print_int(x) | _ => ())
-
-
+repl();

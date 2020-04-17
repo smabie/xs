@@ -7,6 +7,7 @@ open Defs
 
 open Context
 open Core
+open Res
   
 let ctx = Ctx.create();
 
@@ -55,7 +56,7 @@ let ctx = Ctx.create();
     | (Z(x), R(y)) => R(float_of_int(x) /. y)
     | (R(x), Z(y)) => R(x /. float_of_int(y))
     | (R(x), R(y)) => R(x /. y)
-    | _ => raise $ Failure("+ applied on invalid types")
+    | _ => type_err("%")
   }
 }), ("neg", false, ctxs => {
   Stk.push $ switch (Stk.pop()) {
@@ -82,6 +83,40 @@ let ctx = Ctx.create();
   | _ => type_err(".")
   }
 }), ("]", false, _ => Stk.push(N)),
- //("[", false' )
+ ("[", false, ctxs => {
+  let xs = Array.empty();
+
+  let rec go = () => {
+    switch (Stk.pop()) {
+    | N => Stk.push(L(xs))
+    | x =>
+      Array.add_one(xs, x);
+      go()
+    }
+  };
+  go()
+}), ("/", true, ctxs => {
+  let f = Stk.pop_get(ctxs);
+  let x = Stk.pop();
+
+  switch ((f, x)) {
+  | (F({is_oper:_, instrs:Either.Second(f)}), L(xs)) =>
+    let fn = (b, a) => {
+      switch ((b, a)) {
+      | (N, y) => y
+      | (x, y) =>
+        Stk.push(y);
+        Stk.push(x);
+        f(ctxs);
+        Stk.pop()
+      }
+    };
+    
+    Stk.push $ Array.fold_left(fn, N, xs)
+  | (F({is_oper:_, instrs:Either.First(ys)}), L(xs)) => ()
+  | _ => type_err("/")
+  }
+})
+
 ] |>
   List.iter(_, fun | (s, is_oper, f) => Ctx.bind(ctx, s) $ XsFn.create_builtin(is_oper, f));

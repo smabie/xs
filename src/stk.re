@@ -18,6 +18,7 @@ let pop = () => {
   Array.remove_one(stk);
   v
 };
+let peek = () => get(0);
 
 /* pop val, if a quoted name (Q) get the value, otherwise return */
 let pop_get = ctxs => {
@@ -29,4 +30,8 @@ let pop_get = ctxs => {
 
 let swap = (x, y) => Array.swap(stk, convert(x), convert(y));
 let len = Array.length(stk);
+
+let display = () => {
+  Array.iteri((idx, x) => Printf.printf("%d: %s\n", idx, xs_print(x)), stk)
+};
 

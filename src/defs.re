@@ -37,31 +37,33 @@ and fn_t = {
 
 let rec parse_print = x =>
   switch(x) {
-  | Int(x)   => Printf.printf("%d ", x);
-  | Expr(xs) => List.iter(xs, parse_print)
-  | Quote(x) => Printf.printf("`%s ", x)
-  | Null     => Printf.printf("0N ")
-  | Fn(xs)   => List.iter(xs, parse_print)
+  | Int(x)      => Printf.printf("%d ", x);
+  | Expr(xs)    => List.iter(xs, parse_print)
+  | Quote(x)    => Printf.printf("`%s ", x)
+  | Null        => Printf.printf("0N ")
+  | Fn(xs)      => List.iter(xs, parse_print)
   | InfixFn(xs) => List.iter(xs, parse_print)
-  | Str(x)   => Printf.printf("`%s ", x)
-  | Ident(x) => Printf.printf("%s ", x)
-  | Bool(x)  => Printf.printf("%b ", x)
-  | Float(x) => Printf.printf("%f ", x)
-  | Sep      => print_endline("foo")
+  | Str(x)      => Printf.printf("`%s ", x)
+  | Ident(x)    => Printf.printf("%s ", x)
+  | Bool(x)     => Printf.printf("%b ", x)
+  | Float(x)    => Printf.printf("%f ", x)
+  | Sep         => print_endline("foo")
   };
 
 let rec xs_print = x =>
   switch (x) {
-  | Z(x) => Printf.printf("%d ", x)
-  | R(x) => Printf.printf("%f ", x)
-  | Q(x) => Printf.printf("`%s ", x)
-  | B(x) => Printf.printf("%b ", x)
-  | N    => Printf.printf("0N ")
-  | S(x) => Printf.printf("\"%s\" ", x)
-  | F(x) => print_endline("foo")
-  | _ => ()
+  | Z(x) => Printf.sprintf("%d", x)
+  | R(x)  => Printf.sprintf("%f", x)
+  | Q(x)  => Printf.sprintf("`%s", x)
+  | B(x)  => Printf.sprintf("%b", x)
+  | N     => Printf.sprintf("0N")
+  | S(x)  => Printf.sprintf("\"%s\"", x)
+  | L(xs) =>
+    Printf.sprintf("[%s]", String.concat(~sep=" ", List.map(Array.to_list(xs), xs_print)))
+  | _     => ""
   };
 
+        
 /* Append list to array t in place */
 let res_append = (t, xs) => List.iter(xs, _) $ (x) => Array.add_one(t, x)
     
