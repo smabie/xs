@@ -3,67 +3,81 @@ open Core
 open Res
 open Defs
 
+
 let rec with_list ctxs f = list_end ctxs; f (); list_begin ctxs
+
+and map2 ctxs xs ys f =
+  if Array.length xs <> Array.length ys then
+    raise $ Failure "list length unequal"
+  else
+    with_list ctxs @
+      fun () ->
+      let rec go idx =
+        if idx = -1 then ()
+        else (
+          Stk.push @ Array.get xs idx;
+          Stk.push @ Array.get ys idx;
+          f ctxs; go (idx - 1)
+        ) in go @ Array.length xs  - 1
+
+and broadcast ctxs x ys f =
+  with_list ctxs @
+    fun () ->
+    let rec go idx =
+      if idx = -1 then ()
+      else (
+        Stk.push @ Array.get ys idx; Stk.push x;
+        f ctxs; go (idx - 1)
+      ) in go @ Array.length ys - 1
+
 and add ctxs =
   let x = Stk.pop_get ctxs in
   let y = Stk.pop () in
-  
-    match x, y with
-    | Z x, Z y  -> Stk.push @ Z (x + y)
-    | Z x, R y  -> Stk.push @ R (float_of_int x +. y)
-    | R x, Z y  -> Stk.push @ R (x +. float_of_int y)
-    | R x, R y  -> Stk.push @ R (x +. y)
-    | L xs, L ys ->
-       if Array.length xs <> Array.length ys then
-         raise $ Failure "+: list length unequal"
-       else
-         with_list ctxs @
-           fun () ->
-           let len = Array.length xs in
-           let rec go idx =
-             if idx == len then ()
-             else (
-               Stk.push @ Array.get xs idx;
-               Stk.push @ Array.get ys idx;
-               add ctxs; go (idx + 1)
-             ) in go 0
-    | x, L ys ->
-       with_list ctxs @
-         fun () -> Array.iter (fun y -> Stk.push y; Stk.push x; add ctxs) ys;
-    | _ -> type_err "+"
+  match x, y with
+  | Z x, Z y  -> Stk.push @ Z (x + y)
+  | Z x, R y  -> Stk.push @ R (float_of_int x +. y)
+  | R x, Z y  -> Stk.push @ R (x +. float_of_int y)
+  | R x, R y  -> Stk.push @ R (x +. y)
+  | L xs, L ys -> map2 ctxs xs ys add
+  | x, L ys | L ys, x -> broadcast ctxs x ys add
+  | _ -> type_err "+"
 
 and sub ctxs = 
   let x = Stk.pop_get ctxs in
   let y = Stk.pop () in
-  Stk.push $
-    match x, y with
-    | Z x, Z y -> Z (x - y)
-    | Z x, R y -> R (float_of_int x -. y)
-    | R x, Z y -> R (x -. float_of_int y)
-    | R x, R y -> R (x -. y)
-    | _ -> type_err "-"
+  match x, y with
+  | Z x, Z y -> Stk.push @ Z (x - y)
+  | Z x, R y -> Stk.push @ R (float_of_int x -. y)
+  | R x, Z y -> Stk.push @ R (x -. float_of_int y)
+  | R x, R y -> Stk.push @ R (x -. y)
+  | L xs, L ys -> map2 ctxs xs ys sub
+  | x, L ys | L ys, x -> broadcast ctxs x ys sub
+  | _ -> type_err "-"
 
 and mul ctxs =
   let x = Stk.pop_get ctxs in
   let y = Stk.pop () in
-  Stk.push $
-    match x, y with
-    | Z x, Z y -> Z (x * y)
-    | Z x, R y -> R (float_of_int x *. y)
-    | R x, Z y -> R (x *. float_of_int y)
-    | R x, R y -> R (x *. y)
-    | _ -> type_err "*"
+  
+  match x, y with
+  | Z x, Z y -> Stk.push @ Z (x * y)
+  | Z x, R y -> Stk.push @ R (float_of_int x *. y)
+  | R x, Z y -> Stk.push @ R (x *. float_of_int y)
+  | R x, R y -> Stk.push @ R (x *. y)
+  | L xs, L ys -> map2 ctxs xs ys mul
+  | x, L ys | L ys, x -> broadcast ctxs x ys mul
+  | _ -> type_err "*"
 
 and div ctxs =
   let x = Stk.pop_get ctxs in
   let y = Stk.pop () in
-  Stk.push $
-    match x, y with
-    | Z x, Z y -> Z (x / y)
-    | Z x, R y -> R (float_of_int x /. y)
-    | R x, Z y -> R (x /. float_of_int y)
-    | R x, R y -> R (x /. y)
-    | _ -> type_err "%"
+  match x, y with
+  | Z x, Z y -> Stk.push @ Z (x / y)
+  | Z x, R y -> Stk.push @ R (float_of_int x /. y)
+  | R x, Z y -> Stk.push @ R (x /. float_of_int y)
+  | R x, R y -> Stk.push @ R (x /. y)
+  | L xs, L ys -> map2 ctxs xs ys div
+  | x, L ys | L ys, x -> broadcast ctxs x ys div
+  | _ -> type_err "%"
 
 and neg ctxs =
   Stk.push $
