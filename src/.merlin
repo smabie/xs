@@ -95,4 +95,5 @@ S /home/sturm/.opam/default/lib/variantslib
 S /usr/lib/ocaml
 S /usr/lib/ocaml/threads
 S .
+FLG -pp '/home/sturm/.opam/default/bin/cppo -V OCAML:4.09.1'
 FLG -open Dune__exe -w -40

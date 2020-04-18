@@ -1,4 +1,5 @@
 (executable
  (public_name xs)
  (name xs)
- (libraries core angstrom res))
+ (libraries core angstrom res)
+ (preprocess (action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file}))))
