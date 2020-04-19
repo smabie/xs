@@ -10,11 +10,9 @@ open Res
 open Defs
 
 module XsFn = struct
-  let create_builtin ~is_oper  f =
-    F { is_oper; instrs = Either.Second f }
+  let create_builtin ~is_oper  f = F { is_oper; instrs = Either.Second f }
          
-  let create ~is_oper xs =
-    F { is_oper; instrs = Either.First (Array.of_list xs) }
+  let create ~is_oper xs = F { is_oper; instrs = Either.First xs }
 end
 
 module Ctx = struct
@@ -41,7 +39,7 @@ module Ctx = struct
   let setup xs =
     let ctx = create () in
     List.iter xs
-      (function | s, is_oper, f -> bind ctx s $ XsFn.create_builtin is_oper f);
+      (function | s, is_oper, f -> bind ctx s @ XsFn.create_builtin is_oper f);
     ctx
 
 end

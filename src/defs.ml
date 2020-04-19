@@ -35,37 +35,37 @@ and parse_val =
   | Expr of parse_val list 
 and fn_t =
   { is_oper: bool
-  ; instrs: (xs_val Array.t, (string, xs_val) Hashtbl.t list -> unit) Either.t
+  ; instrs: (parse_val list, (string, xs_val) Hashtbl.t list -> unit) Either.t
   }
 
-let rec parse_print x =
+let rec concat_parse xs = String.concat ~sep:" " @ List.rev_map xs parse_print
+and parse_print x =
   match x with
-  | Int x -> printf "%d " x
-  | Expr xs -> List.iter xs parse_print
-  | Quote x -> printf "`%s " x
-  | Null -> printf "0N "
-  | Fn xs -> List.iter xs parse_print
-  | InfixFn xs -> List.iter xs parse_print
-  | Str x -> printf "`%s " x
-  | Ident x -> printf "%s " x
-  | Bool x -> printf "%b " x
-  | Float x -> printf "%f " x
-  | Sep -> ()
-
-let rec xs_print x =
+  | Int x -> sprintf "%d" x
+  | Expr xs -> concat_parse xs
+  | Quote x -> sprintf "`%s" x
+  | Null -> "0N"
+  | Fn xs -> sprintf "(%s)" @ concat_parse xs
+  | InfixFn xs -> sprintf "{%s}" @ concat_parse xs
+  | Str x -> sprintf "`%s" x
+  | Ident x -> sprintf "%s" x
+  | Bool x -> sprintf "%b" x
+  | Float x -> sprintf "%f" x
+  | Sep -> ""
+and xs_print x =
   match x with
   | Z x -> sprintf "%d" x
   | R x -> sprintf "%f" x
   | Q x -> sprintf "`%s" x
   | B x -> sprintf "%b" x
-  | N -> Printf.sprintf "0N"
   | S x -> sprintf "\"%s\"" x
   | L xs ->
-     sprintf "[%s]"
-       (String.concat ~sep:" " @ List.map (Array.to_list xs) xs_print)
+     sprintf "[%s]" @
+       String.concat ~sep:" " @ List.map (Array.to_list xs) xs_print
+  | F { is_oper = b; instrs = Either.First xs } ->
+     sprintf (if b == true then "{%s}" else "(%s)") @ concat_parse xs
+  | N -> "0N"
   | _ -> ""
-
 
 (* append a list to an array  *)
 let res_append t xs = List.iter xs (fun x -> Array.add_one t x)
-

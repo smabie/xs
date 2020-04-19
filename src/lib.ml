@@ -3,7 +3,6 @@ open Core
 open Res
 open Defs
 
-
 let rec with_list ctxs f = list_end ctxs; f (); list_begin ctxs
 
 and map2 ctxs xs ys f =
@@ -93,13 +92,13 @@ and set ctxs =
   | Q x, y ->
      (match List.hd ctxs with
       | Some ctx -> Ctx.bind ctx x y
-      | None -> raise $ Failure "no context found")
+      | None -> raise @ Failure "no context found")
   | _ -> type_err ":"
 
 and apply ctxs =
   match Stk.pop_get ctxs with
   | F { is_oper = _; instrs = Either.Second f } -> f ctxs
-  | F { is_oper = _; instrs = Either.First xs } -> ()
+  | F { is_oper = _; instrs = Either.First xs } -> Stk.eval ctxs (Expr xs)
   | _ -> type_err "."
 
 and list_end ctxs = Stk.push N
@@ -107,23 +106,22 @@ and list_begin ctxs =
   let xs = Array.empty () in
   let rec go () =
     match Stk.pop () with
-    | N -> Stk.push $ L xs
-    | x -> (Array.add_one xs x; go ()) in
+    | N -> Stk.push @ L xs
+    | x -> Array.add_one xs x; go () in
   go ()
 
 and fold ctxs =
   let f = Stk.pop_get ctxs in
   let x = Stk.pop () in
-  match (f, x) with
+  match f, x with
   | F { is_oper = _; instrs = Either.Second f }, L xs ->
      let fn b a =
        (match b, a with
         | N, y -> y
         | x, y -> Stk.push y; Stk.push x; f ctxs; Stk.pop ()) in
-     Stk.push $ Array.fold_left fn N xs
+     Stk.push @ Array.fold_left fn N xs
   | F { is_oper = _; instrs = Either.First ys }, L xs -> ()
   | _ -> type_err "/"
-
 
 let builtin =
   [("+",        true,   add);
@@ -136,4 +134,3 @@ let builtin =
    ("]",        false,  list_end);
    ("[",        false,  list_begin);
    ("/",        true,   fold)]
-
