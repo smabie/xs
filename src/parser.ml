@@ -9,17 +9,16 @@ open Res
 
 open Defs
 
-(* 
- * A list of special operators, each is parsed individually. Besides the 
- * difference in parsing, operators are exactly the same as regular 
- * built-in functions.
- *)
-let opers = String.to_list "+=!@#$%^&*-_/?[]~<>,.:"
+
+(* operators that are parsed individually *)
+let sopers = String.to_list "[]."
+
+(* Operators that confirm to the regex opers+ ex: ++, %%%, etc *)
+let opers = String.to_list "+=!@#$%^&*-_/?~<>,:"
 
 let is_whitespace = function | ' '|'\t'|'\n'|'\r' -> true | _ -> false
 let is_digit = function | '0'..'9' -> true | _ -> false
 let is_alpha = function | 'a'..'z'|'A'..'Z' -> true | _ -> false
-let is_oper c = List.mem opers c (Char.equal)
 
 let ws = take_while is_whitespace
 let sep = (char ';') >>| (fun _ -> Sep)
@@ -37,7 +36,7 @@ let number =
     | false -> return @ Int (int_of_string digits)
     | true ->
        take_while1 is_digit >>|
-         fun frac -> Float (float_of_string (digits ^ "." ^ frac))
+         fun frac -> Float (float_of_string @ digits ^ "." ^ frac)
 
 (* identifiers *)
 let ident =
@@ -55,7 +54,11 @@ let quote =
  * single character operators. They have no special semantics so we just generate
  * the Ident type instead of them having their own type
  *)
-let oper = choice (List.map opers char) >>| fun op -> Ident (Char.to_string op)
+let soper = choice (List.map opers char) >>| fun op -> Ident (Char.to_string op)
+
+let oper =
+  choice @ List.map sopers (fun x -> many1 (char x)) >>|
+    fun cs -> Ident (String.of_char_list cs)
 
 (* 0b -> false, 1b - true *)
 let boolean =
@@ -71,20 +74,21 @@ let null = string_ci "0n" *> return Null
 
 (* a string, can span multiple lines *)
 let str =
-  char '"' *> take_while (fun c -> not @ Char.equal c '"') <* char '"' >>| fun s -> Str s
+  char '"' *>
+    take_while (fun c -> not @ Char.equal c '"') <* char '"' >>| fun s -> Str s
 
 (* An expression, currently only used for the top level value *)
 let expr =
-  (fix (fun expr ->
-       let fn = char '(' *> expr <* char ')' >>| fun x -> Fn x in
-       let infix_fn = char '{' *> expr <* char '}' >>| fun x -> InfixFn x in
-       let xs =
-         [str; quote; sep; null; boolean; number; oper; ident; fn; infix_fn] in
-       (many $ (ws *> (choice xs))) <* ws)) >>=
+  fix (fun expr ->
+      let fn = char '(' *> expr <* char ')' >>| fun x -> Fn x in
+      let infix_fn = char '{' *> expr <* char '}' >>| fun x -> InfixFn x in
+      let xs = [str; quote; sep; null; boolean;
+                number; oper; soper; ident; fn; infix_fn] in
+      (many @ ws *> choice xs) <* ws) >>=
     fun parsed ->
     peek_char >>= function
-    | Some c -> fail $ sprintf "Parsing failed on '%c'" c
-    | None -> return $ Expr parsed
+    | Some c -> fail @ sprintf "Parsing failed on '%c'" c
+    | None -> return @ Expr parsed
 
 (* Create sub-expressions from seperators *)
 let rec mk_tree expr =
