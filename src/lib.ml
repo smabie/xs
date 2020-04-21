@@ -36,7 +36,7 @@ and broadcast  ~rev ctxs x ys f =
 
 and op_add ctxs =               (* + *)
   let x = Rt.pop_eval ctxs in
-  let y = Rt.pop_get ctxs in
+  let y = Rt.pop () in
   match x, y with
   | Z x, Z y  -> Rt.push @ Z (x + y)
   | Z x, R y  -> Rt.push @ R (float_of_int x +. y)
@@ -50,7 +50,7 @@ and op_add ctxs =               (* + *)
 
 and op_sub ctxs =               (* - *)
   let x = Rt.pop_eval ctxs in
-  let y = Rt.pop_get ctxs in
+  let y = Rt.pop () in
   match x, y with
   | Z x, Z y -> Rt.push @ Z (x - y)
   | Z x, R y -> Rt.push @ R (float_of_int x -. y)
@@ -63,7 +63,7 @@ and op_sub ctxs =               (* - *)
 
 and op_mul ctxs =               (* * *)
   let x = Rt.pop_eval ctxs in
-  let y = Rt.pop_get ctxs in
+  let y = Rt.pop () in
   match x, y with
   | Z x, Z y -> Rt.push @ Z (x * y)
   | Z x, R y -> Rt.push @ R (float_of_int x *. y)
@@ -76,7 +76,7 @@ and op_mul ctxs =               (* * *)
 
 and op_div ctxs =               (* % *)
   let x = Rt.pop_eval ctxs in
-  let y = Rt.pop_get ctxs in
+  let y = Rt.pop () in
   match x, y with
   | Z x, Z y -> Rt.push @ Z (x / y)
   | Z x, R y -> Rt.push @ R (float_of_int x /. y)
@@ -87,23 +87,23 @@ and op_div ctxs =               (* % *)
   | L ys, x -> broadcast ~rev:true ctxs x ys op_div
   | _ -> type_err "%"
 
-and op_neg ctxs =               (* neg *)
+and op_neg _ =               (* neg *)
   Rt.push @
-    match Rt.pop_get ctxs with
+    match Rt.pop () with
     | Z x -> Z (-1 * x)
     | R x -> R (-1.0 *. x)
     | _ -> type_err "op_neg"
 
 and op_set ctxs =               (* : *)
   let q = Rt.pop () in
-  let v = Rt.peek_get ctxs in
+  let v = Rt.peek () in
   match ctxs, q, v with
   | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
   | _ -> type_err ":"
 
 and op_set2 ctxs =              (* :: *)
   let q = Rt.pop () in
-  let v = Rt.pop_get ctxs in
+  let v = Rt.pop () in
   match ctxs, q, v with
   | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
   | _ -> type_err "::"
@@ -111,7 +111,7 @@ and op_set2 ctxs =              (* :: *)
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
   | F { is_oper = _; instrs = _ } as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
-  | _ -> type_err "."
+  | x -> Rt.push x
 
 and op_list_end _ = Rt.push N   (* ] *)
 and op_list_begin _ =           (* [ *)
@@ -124,7 +124,7 @@ and op_list_begin _ =           (* [ *)
 
 and op_fold ctxs =              (* / *)
   let f = Rt.pop_get ctxs in
-  let x = Rt.pop_get ctxs in
+  let x = Rt.pop () in
   match f, x with
   | F { is_oper = _; instrs = _} as f, L xs ->
      let fn b a =
@@ -151,8 +151,8 @@ and op_scan ctxs =              (* \ *)
 
 and op_dup _ = Rt.push @ Rt.peek () (* dup *)
 
-and op_rev ctxs =
-  match Rt.pop_get ctxs with
+and op_rev _ =
+  match Rt.pop () with
   | L xs ->
      let ys = Array.empty () in
      let rec go idx =
@@ -166,7 +166,7 @@ and op_rev ctxs =
   
 and op_map ctxs =               (* ' *)
   let f = Rt.pop_get ctxs in
-  let x = Rt.pop_get ctxs in
+  let x = Rt.pop () in
   match f, x with
   | F { is_oper = _; instrs = _} as f, L xs ->
      with_list ctxs @ 
@@ -183,14 +183,15 @@ and op_map ctxs =               (* ' *)
 
 and op_map2 ctxs =              (* '' *)
   let f = Rt.pop_get ctxs in
-  let x = Rt.pop_get ctxs in
-  let y = Rt.pop_get ctxs in
+  let x = Rt.pop () in
+  let y = Rt.pop () in
   match f, x, y with
   | F { is_oper = _; instrs = _} as f, L xs, L ys ->
      map2 ctxs xs ys (Rt.call_fn f)
   | _ -> type_err "''"
 
 and op_drop _ = let _ = Rt.pop () in ()
+
   
 
 let builtin =
