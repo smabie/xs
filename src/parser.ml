@@ -106,5 +106,6 @@ let rec mk_tree expr =
 
 (* top-level parse *)
 let parse s =
-  parse_string expr s |>
-    function | Ok xs -> mk_tree xs | Error s -> raise @ Sys_error s
+  match parse_string expr s with
+  | Ok xs -> mk_tree xs
+  | Error s -> raise @ Sys_error s
