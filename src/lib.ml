@@ -174,7 +174,7 @@ and op_map ctxs =               (* ' *)
        let rec go idx =
          if idx = -1 then ()
          else (
-           Rt.push @ Array.get xs idx;
+           Rt.push xs.(idx);
            Rt.call_fn f ctxs;
            go (idx - 1)
          ) in
