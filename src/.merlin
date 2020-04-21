@@ -28,6 +28,8 @@ B /home/sturm/.opam/default/lib/ppx_assert/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_bench/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_compare/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_derivers
+B /home/sturm/.opam/default/lib/ppx_deriving
+B /home/sturm/.opam/default/lib/ppx_deriving/runtime
 B /home/sturm/.opam/default/lib/ppx_enumerate/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_expect/collector
 B /home/sturm/.opam/default/lib/ppx_expect/common
@@ -88,6 +90,8 @@ S /home/sturm/.opam/default/lib/ppx_assert/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_bench/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_compare/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_derivers
+S /home/sturm/.opam/default/lib/ppx_deriving
+S /home/sturm/.opam/default/lib/ppx_deriving/runtime
 S /home/sturm/.opam/default/lib/ppx_enumerate/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_expect/collector
 S /home/sturm/.opam/default/lib/ppx_expect/common
@@ -119,5 +123,5 @@ S /usr/lib/ocaml
 S /usr/lib/ocaml/compiler-libs
 S /usr/lib/ocaml/threads
 S .
-FLG -ppx '/home/sturm/devl/xs/_build/default/.ppx/bfcab61e6a21ecf6d2f80029fc1ef484/ppx.exe --as-ppx --cookie '\''inline_tests="disabled"'\'' --cookie '\''library-name="xslib"'\'''
-FLG -open Xslib -w -40 -warn-error -a+31-6
+FLG -ppx '/home/sturm/devl/xs/_build/default/.ppx/7cdd8d31a8412a2d58b690e93161a2da/ppx.exe --as-ppx --cookie '\''inline_tests="disabled"'\'' --cookie '\''library-name="xslib"'\'''
+FLG -open Xslib -w -40 -warn-error -a+31-6 -w -6

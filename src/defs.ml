@@ -18,7 +18,7 @@ type xs_val =
   | S of string 
   | F of fn_t 
   | L of xs_val Array.t
-  | N 
+  | N
 and parse_val =
   | Sep 
   | Int of int 

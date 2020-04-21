@@ -59,4 +59,5 @@ let%test _ = t "drop 2 3"               "3"
 
 let%test _ = t "swap 2 3"               "3"
 
+let%test _ = t "til 3"                  "[0 1 2]"
 

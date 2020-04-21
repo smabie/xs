@@ -136,7 +136,7 @@ and op_fold ctxs =              (* / *)
 
 and op_scan ctxs =              (* \ *)
   let f = Rt.pop_get ctxs in
-  let x = Rt.pop_eval ctxs in
+  let x = Rt.pop () in
   match f, x with
   | F { is_oper = _; instrs = _} as f, L xs ->
      let fn b a =
@@ -190,9 +190,21 @@ and op_map2 ctxs =              (* '' *)
      map2 ctxs xs ys (Rt.call_fn f)
   | _ -> type_err "''"
 
-and op_drop _ = let _ = Rt.pop () in ()
+and op_drop _ = let _ = Rt.pop () in () (* drop *)
+and op_swap _ = Array.swap Rt.stk (Rt.convert 0) (Rt.convert 1) (* swap *)
 
-and op_swap _ = Array.swap Rt.stk (Rt.convert 0) (Rt.convert 1)
+and op_til _ =
+  match Rt.pop () with
+  | Z x ->
+     let xs = Array.empty () in
+     let rec go idx =
+       if idx = x then L xs
+       else (
+         Array.add_one xs (Z idx);
+         go (idx + 1)
+       ) in
+     Rt.push @ go 0
+  | _ -> type_err "til"
 
 let builtin =
   [("+",        true,   op_add);
@@ -213,4 +225,5 @@ let builtin =
    ("dup",      false,  op_dup);
    ("drop",     false,  op_drop);
    ("swap",     false,  op_swap);
+   ("til",      false,  op_til)
   ]

@@ -28,6 +28,8 @@ B /home/sturm/.opam/default/lib/ppx_assert/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_bench/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_compare/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_derivers
+B /home/sturm/.opam/default/lib/ppx_deriving
+B /home/sturm/.opam/default/lib/ppx_deriving/runtime
 B /home/sturm/.opam/default/lib/ppx_enumerate/runtime-lib
 B /home/sturm/.opam/default/lib/ppx_expect/collector
 B /home/sturm/.opam/default/lib/ppx_expect/common
@@ -89,6 +91,8 @@ S /home/sturm/.opam/default/lib/ppx_assert/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_bench/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_compare/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_derivers
+S /home/sturm/.opam/default/lib/ppx_deriving
+S /home/sturm/.opam/default/lib/ppx_deriving/runtime
 S /home/sturm/.opam/default/lib/ppx_enumerate/runtime-lib
 S /home/sturm/.opam/default/lib/ppx_expect/collector
 S /home/sturm/.opam/default/lib/ppx_expect/common
