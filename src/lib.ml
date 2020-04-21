@@ -168,7 +168,7 @@ and op_map ctxs =               (* ' *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
   match f, x with
-  | F { is_oper = _; instrs = _} as f, L xs ->
+  | F _ as f, L xs ->
      with_list ctxs @ 
        fun () ->
        let rec go idx =
@@ -186,14 +186,13 @@ and op_map2 ctxs =              (* '' *)
   let x = Rt.pop () in
   let y = Rt.pop () in
   match f, x, y with
-  | F { is_oper = _; instrs = _} as f, L xs, L ys ->
-     map2 ctxs xs ys (Rt.call_fn f)
+  | F _ as f, L xs, L ys -> map2 ctxs xs ys (Rt.call_fn f)
   | _ -> type_err "''"
 
 and op_drop _ = let _ = Rt.pop () in () (* drop *)
 and op_swap _ = Array.swap Rt.stk (Rt.convert 0) (Rt.convert 1) (* swap *)
 
-and op_til _ =
+and op_til _ =                  (* til *)
   match Rt.pop () with
   | Z x ->
      let xs = Array.empty () in
@@ -206,6 +205,11 @@ and op_til _ =
      Rt.push @ go 0
   | _ -> type_err "til"
 
+and op_eq ctxs =                (* = *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  Rt.push @ B (xs_eq x y)
+  
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -218,6 +222,7 @@ let builtin =
    ("''",       true,   op_map2);
    (":",        true,   op_set);
    ("::",       true,   op_set2);
+   ("=",        true,   op_eq);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);
    ("neg",      false,  op_neg);   

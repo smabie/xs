@@ -61,3 +61,13 @@ let%test _ = t "swap 2 3"               "3"
 
 let%test _ = t "til 3"                  "[0 1 2]"
 
+let%test _ = t "1=3"                    "false"
+let%test _ = t "1=1"                    "true"
+let%test _ = t "0n=0n"                  "true"
+let%test _ = t "\"a\"=\"a\""            "true"
+let%test _ = t "([1 2])=[1 2]"          "true"
+let%test _ = t "([1 2])=[0 2]"          "false"
+let%test _ = t "0b=1b"                  "false"
+let%test _ = t "(`a)=`a"                "true"
+let%test _ = t "((1))=(1)"              "true"
+

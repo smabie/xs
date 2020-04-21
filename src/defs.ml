@@ -77,3 +77,23 @@ let res_rev xs =
       go (idx - 1)
     ) in
   go (Array.length xs - 1) 
+
+let rec xs_eq x y =
+  match x, y with
+  | N, N -> true
+  | Z x, Z y -> x = y
+  | R x, R y -> Float.equal x y
+  | B x, B y -> Bool.equal x y
+  | S x, S y -> String.equal x y
+  | Q x, Q y -> String.equal x y
+  | (F _ as fx), (F _ as fy) ->
+     String.equal (xs_to_string fx) (xs_to_string fy)
+  | L xs, L ys when Array.length xs = Array.length ys ->
+     let len = Array.length xs in
+     let rec go idx =
+       if idx = len then true
+       else if xs_eq xs.(idx) ys.(idx) then go (idx + 1)
+       else false in
+     go 0
+  | _ -> false
+            
