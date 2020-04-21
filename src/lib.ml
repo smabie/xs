@@ -96,12 +96,17 @@ and op_neg ctxs =               (* neg *)
 
 and op_set ctxs =               (* : *)
   let q = Rt.pop () in
+  let v = Rt.peek_get ctxs in
+  match ctxs, q, v with
+  | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
+  | _ -> type_err ":"
+
+and op_set2 ctxs =              (* :: *)
+  let q = Rt.pop () in
   let v = Rt.pop_get ctxs in
   match ctxs, q, v with
-  | ctx :: _, Q x, y ->
-     Rt.bind_ctx ctx x y;
-     Rt.push y
-  | _ -> type_err ":"
+  | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
+  | _ -> type_err "::"
 
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
@@ -144,7 +149,7 @@ and op_scan ctxs =              (* \ *)
      op_rev ctxs;
   | _ -> type_err "/"
 
-and op_dup _ = Rt.push @ Rt.peek ()
+and op_dup _ = Rt.push @ Rt.peek () (* dup *)
 
 and op_rev ctxs =
   match Rt.pop_get ctxs with
@@ -185,19 +190,25 @@ and op_map2 ctxs =              (* '' *)
      map2 ctxs xs ys (Rt.call_fn f)
   | _ -> type_err "''"
 
+and op_drop _ = let _ = Rt.pop () in ()
+  
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
    ("*",        true,   op_mul);
    ("%",        true,   op_div);
-   ("neg",      false,  op_neg);
-   (":",        true,   op_set);
    (".",        true,   op_apply);
-   ("]",        false,  op_list_end);
-   ("[",        false,  op_list_begin);
    ("/",        true,   op_fold);
    ("\\",       true,   op_scan);
    ("'",        true,   op_map);
    ("''",       true,   op_map2);
+   (":",        true,   op_set);
+   ("::",       true,   op_set2);
+   ("]",        false,  op_list_end);
+   ("[",        false,  op_list_begin);
+   ("neg",      false,  op_neg);   
    ("rev",      false,  op_rev);
-   ("dup",      false,  op_dup)]
+   ("dup",      false,  op_dup);
+   ("drop",     false,  op_drop);
+  ]
