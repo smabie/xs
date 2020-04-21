@@ -71,3 +71,6 @@ let%test _ = t "0b=1b"                  "false"
 let%test _ = t "(`a)=`a"                "true"
 let%test _ = t "((1))=(1)"              "true"
 
+let%test _ = t "if 0=0 (0) (1)"         "0"
+let%test _ = t "if 0=1 (0) (1)"         "1"
+

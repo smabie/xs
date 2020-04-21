@@ -209,7 +209,16 @@ and op_eq ctxs =                (* = *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   Rt.push @ B (xs_eq x y)
-  
+
+and op_if ctxs =
+  let cond = Rt.pop () in
+  let x = Rt.pop () in
+  let y = Rt.pop () in
+  match cond, x, y with
+  | B b, (F _ as fx), (F _ as fy) ->
+     Rt.call_fn (if Bool.equal b true then fx else fy) ctxs
+  | _ -> type_err "if"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -223,6 +232,7 @@ let builtin =
    (":",        true,   op_set);
    ("::",       true,   op_set2);
    ("=",        true,   op_eq);
+   ("if",       false,   op_if);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);
    ("neg",      false,  op_neg);   
