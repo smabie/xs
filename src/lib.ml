@@ -89,11 +89,10 @@ and neg ctxs =                  (* neg *)
 and set ctxs =                  (* : *)
   let q = Rt.pop () in
   let v = Rt.pop_get ctxs in
-  match q, v with
-  | Q x, y ->
-     (match List.hd ctxs with
-      | Some ctx -> Rt.bind_ctx ctx x y
-      | None -> raise @ Failure "no context found")
+  match ctxs, q, v with
+  | ctx :: _, Q x, y ->
+     Rt.bind_ctx ctx x y;
+     Rt.push y
   | _ -> type_err ":"
 
 and apply ctxs =                (* . *)
