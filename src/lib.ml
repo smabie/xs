@@ -15,7 +15,6 @@ and map2 ctxs xs ys f =
         else (
           Rt.push @ Array.get xs idx;
           Rt.push @ Array.get ys idx;
-          print_int @ Rt.len ();
           f ctxs;
           go (idx - 1)
         ) in
@@ -141,25 +140,13 @@ and op_map ctxs =                  (* ' *)
   | _ -> type_err "'"
 
 and op_map2 ctxs =              (* '' *)
-  print_int @ Rt.len ();
   let f = Rt.pop_get ctxs in
   let x = Rt.pop_get ctxs in
   let y = Rt.pop_get ctxs in
   
   match f, x, y with
   | F { is_oper = _; instrs = _} as f, L xs, L ys ->
-     with_list ctxs @ 
-       fun () ->
-       let rec go idx =
-         if idx == -1 then ()
-         else (
-           Rt.push @ Array.get ys idx;
-           Rt.push @ Array.get xs idx;
-           Rt.call_fn f ctxs;
-           go (idx - 1)
-         ) in
-       go @ Array.length xs - 1
-     (* map2 ctxs xs ys (Rt.call_fn f) *)
+     map2 ctxs xs ys (Rt.call_fn f)
   | _ -> type_err "''"
 
 let builtin =
