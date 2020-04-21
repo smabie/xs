@@ -36,8 +36,8 @@ and fn_t =
   ; instrs: (parse_val list, (string, xs_val) Hashtbl.t list -> unit) Either.t
   }
 
-let rec concat_parse xs = String.concat ~sep:" " @ List.rev_map xs parse_print
-and parse_print x =
+let rec concat_parse xs = String.concat ~sep:" " @ List.rev_map xs parse_to_string
+and parse_to_string x =
   match x with
   | Int x -> sprintf "%d" x
   | Expr xs -> concat_parse xs
@@ -50,7 +50,7 @@ and parse_print x =
   | Bool x -> sprintf "%b" x
   | Float x -> sprintf "%f" x
   | Sep -> ""
-and xs_print x =
+and xs_to_string x =
   match x with
   | Z x -> sprintf "%d" x
   | R x -> sprintf "%f" x
@@ -59,7 +59,7 @@ and xs_print x =
   | S x -> sprintf "\"%s\"" x
   | L xs ->
      sprintf "[%s]" @
-       String.concat ~sep:" " @ List.map (Array.to_list xs) xs_print
+       String.concat ~sep:" " @ List.map (Array.to_list xs) xs_to_string
   | F { is_oper = b; instrs = Either.First xs } ->
      sprintf (if phys_equal b true then "{%s}" else "(%s)") @ concat_parse xs
   | N -> "0N"
@@ -77,4 +77,3 @@ let res_rev xs =
       go (idx - 1)
     ) in
   go (Array.length xs - 1) 
-      

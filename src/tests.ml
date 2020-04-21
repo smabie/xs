@@ -5,7 +5,7 @@ let ctxs = [Rt.setup Lib.builtin]
 
 let run s =
   Rt.eval ctxs @ Parser.parse s;
-  xs_print @ Rt.pop ()
+  xs_to_string @ Rt.pop ()
 
 let t x y = String.equal (run x) y
 

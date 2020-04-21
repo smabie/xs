@@ -98,4 +98,4 @@ let pop_eval ctxs =
   | x -> x
 
 let display () =
-  Array.iteri (fun idx x -> printf "%d: %s\n" idx @ xs_print x) stk
+  Array.iteri (fun idx x -> printf "%d: %s\n" idx @ xs_to_string x) stk
