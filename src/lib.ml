@@ -30,7 +30,7 @@ and broadcast ctxs x ys f =
         f ctxs; go (idx - 1)
       ) in go @ Array.length ys - 1
 
-and op_add ctxs =                  (* + *)
+and op_add ctxs =               (* + *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop_eval ctxs in
   match x, y with
@@ -43,7 +43,7 @@ and op_add ctxs =                  (* + *)
   | _ ->
      type_err "+"
 
-and op_sub ctxs =                  (* - *)
+and op_sub ctxs =               (* - *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop_eval ctxs in
   match x, y with
@@ -55,7 +55,7 @@ and op_sub ctxs =                  (* - *)
   | x, L ys | L ys, x -> broadcast ctxs x ys op_sub
   | _ -> type_err "-"
 
-and op_mul ctxs =                  (* * *)
+and op_mul ctxs =               (* * *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop_eval ctxs in
   
@@ -68,7 +68,7 @@ and op_mul ctxs =                  (* * *)
   | x, L ys | L ys, x -> broadcast ctxs x ys op_mul
   | _ -> type_err "*"
 
-and op_div ctxs =                  (* % *)
+and op_div ctxs =               (* % *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop_eval ctxs in
   match x, y with
@@ -80,14 +80,14 @@ and op_div ctxs =                  (* % *)
   | x, L ys | L ys, x -> broadcast ctxs x ys op_div
   | _ -> type_err "%"
 
-and op_neg ctxs =                  (* op_neg *)
+and op_neg ctxs =               (* neg *)
   Rt.push @
     match Rt.pop_eval ctxs with
     | Z x -> Z (-1 * x)
     | R x -> R (-1.0 *. x)
     | _ -> type_err "op_neg"
 
-and op_set ctxs =                  (* : *)
+and op_set ctxs =               (* : *)
   let q = Rt.pop () in
   let v = Rt.pop_get ctxs in
   match ctxs, q, v with
@@ -96,7 +96,7 @@ and op_set ctxs =                  (* : *)
      Rt.push y
   | _ -> type_err ":"
 
-and op_apply ctxs =                (* . *)
+and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
   | F { is_oper = _; instrs = _ } as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
   | _ -> type_err "."
@@ -110,7 +110,7 @@ and op_list_begin ctxs =           (* [ *)
     | x -> Array.add_one xs x; go () in
   go ()
 
-and op_fold ctxs =                 (* / *)
+and op_fold ctxs =              (* / *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop_eval ctxs in
   match f, x with
@@ -122,7 +122,7 @@ and op_fold ctxs =                 (* / *)
      Rt.push @ Array.fold_left fn N xs
   | _ -> type_err "/"
 
-and op_map ctxs =                  (* ' *)
+and op_map ctxs =               (* ' *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop_eval ctxs in
   match f, x with
@@ -143,7 +143,6 @@ and op_map2 ctxs =              (* '' *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop_get ctxs in
   let y = Rt.pop_get ctxs in
-  
   match f, x, y with
   | F { is_oper = _; instrs = _} as f, L xs, L ys ->
      map2 ctxs xs ys (Rt.call_fn f)
