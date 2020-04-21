@@ -98,7 +98,7 @@ and set ctxs =                  (* : *)
 
 and apply ctxs =                (* . *)
   match Rt.pop_get ctxs with
-  | F { is_oper = _; instrs = _ } as f -> Rt.call_fn f ctxs
+  | F { is_oper = _; instrs = _ } as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
   | _ -> type_err "."
 
 and list_end ctxs = Rt.push N   (* ] *)
@@ -138,7 +138,7 @@ and map ctxs =                  (* ' *)
          ) in
        go @ Array.length xs - 1
   | _ -> type_err "'"
-  
+
 let builtin =
   [("+",        true,   add);
    ("-",        true,   sub);

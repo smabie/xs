@@ -81,14 +81,13 @@ let rec eval ctxs x =
      Array.of_list xs |> swap_opers ctxs |> Array.iter (eval ctxs)
   | Ident x ->
      (match lookup ctxs x with
-      | F { is_oper = _; instrs = Either.Second f } -> f ctxs
-      | F { is_oper = _; instrs = Either.First xs } -> ()
+      | F { is_oper = _; instrs = _ } as f -> call_fn f (create_ctx () :: ctxs)
       | x -> push x)
   | Fn xs -> push @ F { is_oper = false; instrs = Either.First xs }
   | InfixFn xs -> push @ F { is_oper = true; instrs = Either.First xs }
   | _ -> ()
 
-let call_fn f ctxs =
+and  call_fn f ctxs =
   match f with
   | F { is_oper = _; instrs = Either.Second f } -> f ctxs
   | F { is_oper = _; instrs = Either.First xs } -> eval ctxs (Expr xs)
