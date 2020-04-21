@@ -77,8 +77,7 @@ let rec eval ctxs x =
   | Null -> push N
   | Str x -> push (S x)
   | Quote x -> push (Q x)
-  | Expr xs ->
-     Array.of_list xs |> swap_opers ctxs |> Array.iter (eval ctxs)
+  | Expr xs -> Array.of_list xs |> swap_opers ctxs |> Array.iter (eval ctxs)
   | Ident x ->
      (match lookup ctxs x with
       | F { is_oper = _; instrs = Either.First _ } as f ->
