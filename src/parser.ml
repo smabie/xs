@@ -9,7 +9,6 @@ open Res
 
 open Defs
 
-
 (* operators that are parsed individually *)
 let sopers = String.to_list "[]."
 
@@ -54,10 +53,10 @@ let quote =
  * single character operators. They have no special semantics so we just generate
  * the Ident type instead of them having their own type
  *)
-let soper = choice (List.map opers char) >>| fun op -> Ident (Char.to_string op)
+let soper = choice (List.map sopers char) >>| fun op -> Ident (Char.to_string op)
 
 let oper =
-  choice @ List.map sopers (fun x -> many1 (char x)) >>|
+  choice @ List.map opers (fun x -> many1 (char x)) >>|
     fun cs -> Ident (String.of_char_list cs)
 
 (* 0b -> false, 1b - true *)
@@ -108,4 +107,4 @@ let rec mk_tree expr =
 (* top-level parse *)
 let parse s =
   parse_string expr s |>
-    function | Ok xs -> mk_tree xs | Error s -> raise $ Sys_error s
+    function | Ok xs -> mk_tree xs | Error s -> raise @ Sys_error s

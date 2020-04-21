@@ -8,7 +8,6 @@ open Res
 open Stdio
 
 let (@) = (@@)
-let ($) = (@@)
 
 let type_err s = raise @ Failure (Printf.sprintf "%s applied on invalid types" s)
 
