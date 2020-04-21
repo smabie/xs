@@ -1,5 +1,9 @@
-(executable
+(library
  (public_name xs)
- (name xs)
- (libraries core angstrom res)
- (preprocess (action (run %{bin:cppo} -V OCAML:%{ocaml_version} %{input-file}))))
+ (name xslib)
+ (inline_tests)
+ (flags (:standard -warn-error -a+31-6))
+ (libraries core angstrom res ppx_inline_test)
+ (preprocess (pps ppx_inline_test))
+)
+

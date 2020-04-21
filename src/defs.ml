@@ -5,7 +5,6 @@
 
 open Core
 open Res
-open Stdio
 
 let (@) = (@@)
 
@@ -62,9 +61,20 @@ and xs_print x =
      sprintf "[%s]" @
        String.concat ~sep:" " @ List.map (Array.to_list xs) xs_print
   | F { is_oper = b; instrs = Either.First xs } ->
-     sprintf (if b == true then "{%s}" else "(%s)") @ concat_parse xs
+     sprintf (if phys_equal b true then "{%s}" else "(%s)") @ concat_parse xs
   | N -> "0N"
   | _ -> ""
 
 (* append a list to an array  *)
 let res_append t xs = List.iter xs (fun x -> Array.add_one t x)
+
+let res_rev xs =
+  let ys = Array.empty () in
+  let rec go idx =
+    if idx = -1 then ys
+    else (
+      Array.add_one ys xs.(idx);
+      go (idx - 1)
+    ) in
+  go (Array.length xs - 1) 
+      

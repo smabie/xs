@@ -13,7 +13,7 @@ open Defs
 let sopers = String.to_list "[]."
 
 (* Operators that confirm to the regex opers+ ex: ++, %%%, etc *)
-let opers = String.to_list "+=!@#$%^&*-_/?~<>,:'"
+let opers = String.to_list "+=!@#$%^&*-_\\/?~<>,:'"
 
 let is_whitespace = function | ' '|'\t'|'\n'|'\r' -> true | _ -> false
 let is_digit = function | '0'..'9' -> true | _ -> false

@@ -80,9 +80,7 @@ let rec eval ctxs x =
   | Expr xs -> Array.of_list xs |> swap_opers ctxs |> Array.iter (eval ctxs)
   | Ident x ->
      (match lookup ctxs x with
-      | F { is_oper = _; instrs = Either.First _ } as f ->
-         call_fn f (create_ctx () :: ctxs)
-      | F { is_oper = _; instrs = Either.Second _ } as f -> call_fn f ctxs
+      | F { is_oper = _; instrs = _ } as f -> call_fn f ctxs 
       | x -> push x)
   | Fn xs -> push @ F { is_oper = false; instrs = Either.First xs }
   | InfixFn xs -> push @ F { is_oper = true; instrs = Either.First xs }
@@ -91,13 +89,12 @@ let rec eval ctxs x =
 and  call_fn f ctxs =
   match f with
   | F { is_oper = _; instrs = Either.Second f } -> f ctxs
-  | F { is_oper = _; instrs = Either.First xs } -> eval ctxs (Expr xs)
+  | F { is_oper = _; instrs = Either.First xs } -> eval (create_ctx () :: ctxs) (Expr xs)
   | _ -> raise @ Failure "xs_val is not a function"
 
 let pop_eval ctxs =
   match pop_get ctxs with
-  | F { is_oper = _; instrs = Either.Second f } -> pop @ f ctxs
-  | F { is_oper = _; instrs = Either.First xs } -> pop @ eval ctxs @ Expr xs
+  | F { is_oper = _; instrs = _ } as f -> pop @ call_fn f ctxs
   | x -> x
 
 let display () =

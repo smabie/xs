@@ -1,0 +1,7 @@
+(executable
+ (public_name xs)
+ (name xs)
+ (libraries core angstrom res xslib)
+ (preprocess (pps ppx_inline_test))
+)
+

@@ -1,12 +1,10 @@
 
 open Core
-open Angstrom
-open Res
 
 open Defs
 open Parser  
 
-let rec repl () =
+let repl () =
   let ctxs = [Rt.setup Lib.builtin] in
   let rec go () =
     print_string("xs> ");
@@ -15,7 +13,5 @@ let rec repl () =
     go () in
   go ()
 ;;
-
-repl ()
 
 
