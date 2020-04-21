@@ -192,7 +192,7 @@ and op_map2 ctxs =              (* '' *)
 
 and op_drop _ = let _ = Rt.pop () in ()
 
-  
+and op_swap _ = Array.swap Rt.stk (Rt.convert 0) (Rt.convert 1)
 
 let builtin =
   [("+",        true,   op_add);
@@ -212,4 +212,5 @@ let builtin =
    ("rev",      false,  op_rev);
    ("dup",      false,  op_dup);
    ("drop",     false,  op_drop);
+   ("swap",     false,  op_swap);
   ]

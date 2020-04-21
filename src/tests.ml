@@ -53,5 +53,10 @@ let%test _ = t "(+.)''[1 2] [2 1]"      "[3 3]"
 
 let%test _ = t "rev [2 1]"              "[1 2]"
 
-let%test _ = t "dup 2"                  "2"
+let%test _ = t "+. dup 2"               "4"
+
+let%test _ = t "drop 2 3"               "3"
+
+let%test _ = t "swap 2 3"               "3"
+
 
