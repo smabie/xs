@@ -366,12 +366,66 @@ and op_take ctxs =              (* # *)
   | N, x -> print_endline @ xs_to_string x
   | _ -> type_err "#"
 
+and op_pow ctxs =               (* ** *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | Z x, Z y -> Rt.push @ Z (int_of_float @ (float_of_int x) ** (float_of_int y))
+  | Z x, R y -> Rt.push @ R ((float_of_int x) ** y)
+  | R x, Z y -> Rt.push @ R (x ** (float_of_int y))
+  | R x, R y -> Rt.push @ R (x ** y)
+  | x, L ys -> broadcast ~rev:false ctxs x ys op_pow
+  | _ -> type_err "**"
+
+and op_ln ctxs =                (* ln *)
+  match Rt.pop () with
+  | Z x -> Rt.push @ R (log @ float_of_int x)
+  | R x -> Rt.push @ R (log x)
+  | L xs -> map ctxs xs op_ln
+  | _ -> type_err "ln"
+
+and op_sin ctxs =               (* sin *)
+  match Rt.pop () with
+  | Z x -> Rt.push @ R (sin @ float_of_int x)
+  | R x -> Rt.push @ R (sin x)
+  | L xs -> map ctxs xs op_sin
+  | _ -> type_err "sin"
+
+and op_cos ctxs =               (* cos *)
+  match Rt.pop () with
+  | Z x -> Rt.push @ R (cos @ float_of_int x)
+  | R x -> Rt.push @ R (cos x)
+  | L xs -> map ctxs xs op_cos
+  | _ -> type_err "cos"
+
+and op_tan ctxs =               (* tan *)
+  match Rt.pop () with
+  | Z x -> Rt.push @ R (tan @ float_of_int x)
+  | R x -> Rt.push @ R (tan x)
+  | L xs -> map ctxs xs op_cos
+  | _ -> type_err "tan"
+
+and op_ceil ctxs =              (* ceil *)
+  match Rt.pop () with
+  | Z x -> Rt.push @ R (float_of_int x)
+  | R x -> Rt.push @ R (ceil x)
+  | L xs -> map ctxs xs op_ceil
+  | _ -> type_err "ceil"
+
+and op_floor ctxs =             (* floor *)
+  match Rt.pop () with
+  | Z x -> Rt.push @ R (float_of_int x)
+  | R x -> Rt.push @ R (floor x)
+  | L xs -> map ctxs xs op_floor
+  | _ -> type_err "floor"
+
 
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
    ("*",        true,   op_mul);
    ("%",        true,   op_div);
+   ("**",       true,   op_pow);
    (".",        true,   op_apply);
    ("/",        true,   op_fold);
    ("\\",       true,   op_scan);
@@ -389,6 +443,12 @@ let builtin =
    (",",        true,   op_concat);
    (",,",       true,   op_cons);
    ("#",        true,   op_take);
+   ("ln",       false,  op_ln);
+   ("sin",      false,  op_sin);
+   ("cos",      false,  op_cos);
+   ("tan",      false,  op_tan);
+   ("floor",    false,  op_floor);
+   ("ceil",     false,  op_ceil);
    ("if",       false,  op_if);
    ("cond",     false,  op_cond);
    ("]",        false,  op_list_end);
