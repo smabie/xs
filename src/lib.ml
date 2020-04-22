@@ -308,6 +308,25 @@ and op_if ctxs =                (* if *)
      Rt.call_fn (if Bool.equal b true then fx else fy) ctxs
   | _ -> type_err "if"
 
+and op_cond ctxs =              (* cond *)
+  match Rt.pop () with
+  | L xs ->
+     let len = Array.length xs in
+     if len mod 2 = 0 then
+       raise @ Failure "cond list's length must be odd"
+     else
+       let rec go idx =
+         if idx = len - 1 then
+           Rt.call_fn xs.(len - 1) ctxs
+         else (
+           Rt.call_fn xs.(idx) ctxs;
+           match Rt.pop () with
+           | B true -> Rt.call_fn xs.(idx + 1) ctxs 
+           | B false -> go (idx + 2)
+           | _ -> type_err "cond"
+         ) in go 0
+  | _ -> type_err "cond"
+
 and op_concat ctxs =            (* , *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
@@ -328,6 +347,7 @@ and op_count _ =             (* count *)
   match x with
   | L xs -> Rt.push @ Z (Array.length xs)
   | _ -> type_err "count"
+
 
 let builtin =
   [("+",        true,   op_add);
@@ -351,6 +371,7 @@ let builtin =
    (",",        true,   op_concat);
    (",,",       true,   op_cons);
    ("if",       false,  op_if);
+   ("cond",     false,  op_cond);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);
    ("neg",      false,  op_neg);   
