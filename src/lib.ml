@@ -322,7 +322,13 @@ and op_cons ctxs =            (* ,, *)
   | x, L ys -> Rt.push @ L (Array.append (Array.create 1 x) ys)
   | L xs, y -> Rt.push @ L (Array.append xs (Array.create 1 y))
   | _ -> type_err ","
-  
+
+and op_count _ =             (* count *)
+  let x = Rt.pop () in
+  match x with
+  | L xs -> Rt.push @ Z (Array.length xs)
+  | _ -> type_err "count"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -352,5 +358,6 @@ let builtin =
    ("dup",      false,  op_dup);
    ("drop",     false,  op_drop);
    ("swap",     false,  op_swap);
-   ("til",      false,  op_til)
+   ("til",      false,  op_til);
+   ("count",    false,  op_count)
   ]
