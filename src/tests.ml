@@ -43,6 +43,10 @@ let%test _ = t "neg 5"                  "-5"
 
 let%test _ = t "a+a:3"                  "6"
 let%test _ = t "a*(a:3)*a+a:1"          "6"
+let%test _ = t "([`a`b`c]):1 2 3"       "1"
+
+let%test _ = t "a a::3"                 "3"
+let%test _ = t "a([`a`b`c])::1 2 3"     "1"
 
 let%test _ = t "+/[1 2 3 4]"            "10"
 let%test _ = t "(+.)/[1 2 3 4]"         "10"

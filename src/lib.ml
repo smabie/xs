@@ -104,7 +104,7 @@ and op_set ctxs =               (* : *)
       | _ -> type_err ":")
   | _ ->  type_err ":"
 
-and op_set2 ctxs =
+and op_set2 ctxs =              (* :: *)
   match Rt.pop () with
   | Q _ as q -> Rt.bind ctxs q (Rt.pop ())
   | F _ as f ->
@@ -113,13 +113,6 @@ and op_set2 ctxs =
       | L qs -> Array.iter (fun q -> Rt.bind ctxs q (Rt.pop ())) qs
       | _ -> type_err "::")
   | _ ->  type_err "::"
-
-(* and op_set2 ctxs =              (\* :: *\)
- *   let q = Rt.pop () in
- *   let v = Rt.pop () in
- *   match ctxs, q, v with
- *   | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
- *   | _ -> type_err "::" *)
 
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
