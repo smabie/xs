@@ -95,18 +95,31 @@ and op_neg _ =               (* neg *)
     | _ -> type_err "op_neg"
 
 and op_set ctxs =               (* : *)
-  let q = Rt.pop () in
-  let v = Rt.peek () in
-  match ctxs, q, v with
-  | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
-  | _ -> type_err ":"
+  match Rt.pop () with
+  | Q _ as q -> Rt.bind ctxs q (Rt.peek ())
+  | F _ as f ->
+     Rt.call_fn f ctxs;
+     (match Rt.pop () with
+      | L qs -> Array.iteri (fun idx q -> Rt.bind ctxs q (Rt.get idx)) qs
+      | _ -> type_err ":")
+  | _ ->  type_err ":"
 
-and op_set2 ctxs =              (* :: *)
-  let q = Rt.pop () in
-  let v = Rt.pop () in
-  match ctxs, q, v with
-  | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
-  | _ -> type_err "::"
+and op_set2 ctxs =
+  match Rt.pop () with
+  | Q _ as q -> Rt.bind ctxs q (Rt.pop ())
+  | F _ as f ->
+     Rt.call_fn f ctxs;
+     (match Rt.pop () with
+      | L qs -> Array.iter (fun q -> Rt.bind ctxs q (Rt.pop ())) qs
+      | _ -> type_err "::")
+  | _ ->  type_err "::"
+
+(* and op_set2 ctxs =              (\* :: *\)
+ *   let q = Rt.pop () in
+ *   let v = Rt.pop () in
+ *   match ctxs, q, v with
+ *   | ctx :: _, Q x, y -> Rt.bind_ctx ctx x y;
+ *   | _ -> type_err "::" *)
 
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with

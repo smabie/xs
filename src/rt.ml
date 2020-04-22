@@ -50,6 +50,11 @@ let create_fn ~is_oper xs = F { is_oper; instrs = Either.First xs }
 
 let create_ctx () = Hashtbl.create (module String)
 let bind_ctx t (k : string) (v : xs_val) = Hashtbl.set t k v
+let bind ts q v =
+  match ts, q, v with
+  | ctx :: _, Q k, v -> bind_ctx ctx k v
+  | _ -> raise @ Failure "invalid types for bind"
+  
 let setup xs =
   let ctx = create_ctx () in
   List.iter xs
