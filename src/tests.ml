@@ -90,3 +90,8 @@ let%test _ = t "count [1 2 3]"          "3"
 
 let%test _ = t "cond [(1b) (1) (2)]"    "1"
 let%test _ = t "cond [(0b) (1) (2)]"    "2"
+
+let%test _ = t "3#0"                    "[0 0 0]"
+let%test _ = t "3#[1 2 3 4]"            "[1 2 3]"
+let%test _ = t "(neg 2)#[1 2 3 4]"      "[3 4]"
+let%test _ = t "3#[1 2]"                "[1 2 1]"

@@ -41,7 +41,7 @@ and broadcast  ~rev ctxs x ys f =
         if rev then (
           Rt.push x; Rt.push ys.(idx)
         ) else (
-          Rt.push ys.(idx); Rt.push x; 
+          Rt.push ys.(idx); Rt.push x;
         );
         f ctxs; go (idx - 1)
       ) in go @ Array.length ys - 1
@@ -348,6 +348,22 @@ and op_count _ =             (* count *)
   | L xs -> Rt.push @ Z (Array.length xs)
   | _ -> type_err "count"
 
+and op_take ctxs =              (* # *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | Z x, L xs ->
+     let len = Array.length xs in
+     let ys = Array.empty () in
+     let rec go idx c =
+       if c = abs x then Rt.push @ L ys
+       else (
+         Array.add_one ys xs.(idx mod len);
+         go (idx + 1) (c + 1)
+       ) in
+     if x > 0 then go 0 0 else go (len + x) 0
+  | Z x, y -> Rt.push @ L (Array.create (abs x) y)
+  | _ -> type_err "#"
 
 let builtin =
   [("+",        true,   op_add);
@@ -370,11 +386,12 @@ let builtin =
    ("lq",       true,   op_leq);
    (",",        true,   op_concat);
    (",,",       true,   op_cons);
+   ("#",        true,   op_take);
    ("if",       false,  op_if);
    ("cond",     false,  op_cond);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);
-   ("neg",      false,  op_neg);   
+   ("neg",      false,  op_neg);
    ("rev",      false,  op_rev);
    ("dup",      false,  op_dup);
    ("drop",     false,  op_drop);
