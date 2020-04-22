@@ -20,6 +20,18 @@ and map2 ctxs xs ys f =
         ) in
       go @ Array.length xs - 1
 
+and map ctxs xs f =
+  with_list ctxs @
+    fun () ->
+    let rec go idx =
+      if idx = -1 then ()
+      else (
+        Rt.push xs.(idx);
+        f ctxs;
+        go (idx - 1)
+      ) in
+    go @ Array.length xs - 1
+
 and broadcast  ~rev ctxs x ys f =
   with_list ctxs @
     fun () ->
@@ -114,10 +126,20 @@ and op_set2 ctxs =              (* :: *)
       | _ -> type_err "::")
   | _ ->  type_err "::"
 
+and op_get ctxs =               (* @ *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y  with
+  | Z idx, L xs -> Rt.push @ xs.(idx mod Array.length xs)
+  | L idxs, L xs ->
+       Rt.push @
+         L (Array.map (function | Z(idx) -> xs.(idx) | _ -> type_err ".") idxs)
+  | _ -> type_err "@"
+
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
-  | F { is_oper = _; instrs = _ } as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
-  | x -> Rt.push x
+  | F _ as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
+  | _ -> type_err "."
 
 and op_list_end _ = Rt.push N   (* ] *)
 and op_list_begin _ =           (* [ *)
@@ -214,6 +236,11 @@ and op_til _ =                  (* til *)
 and op_eq ctxs =                (* = *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
+  Rt.push @ B (xs_eq x y)
+
+and op_trues ctxs =             (* ~ *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
   match x, y with
   | L xs, L ys -> map2 ctxs xs ys op_eq
   | x, L ys -> broadcast ~rev:false ctxs x ys op_eq
@@ -281,6 +308,21 @@ and op_if ctxs =                (* if *)
      Rt.call_fn (if Bool.equal b true then fx else fy) ctxs
   | _ -> type_err "if"
 
+and op_concat ctxs =            (* , *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | L xs, L ys -> Rt.push @ L (Array.append xs ys)
+  | _ -> type_err ","
+
+and op_cons ctxs =            (* ,, *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | x, L ys -> Rt.push @ L (Array.append (Array.create 1 x) ys)
+  | L xs, y -> Rt.push @ L (Array.append xs (Array.create 1 y))
+  | _ -> type_err ","
+  
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -290,14 +332,18 @@ let builtin =
    ("/",        true,   op_fold);
    ("\\",       true,   op_scan);
    ("'",        true,   op_map);
+   ("@",        true,   op_get);
    ("''",       true,   op_map2);
    (":",        true,   op_set);
    ("::",       true,   op_set2);
    ("=",        true,   op_eq);
+   ("~",        true,   op_trues);
    ("<",        true,   op_lt);
    (">",        true,   op_gt);
    ("gq",       true,   op_geq);
    ("lq",       true,   op_leq);
+   (",",        true,   op_concat);
+   (",,",       true,   op_cons);
    ("if",       false,  op_if);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);

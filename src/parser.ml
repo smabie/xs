@@ -5,7 +5,6 @@
 
 open Core
 open Angstrom
-open Res
 
 open Defs
 
