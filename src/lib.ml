@@ -214,9 +214,65 @@ and op_til _ =                  (* til *)
 and op_eq ctxs =                (* = *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  Rt.push @ B (xs_eq x y)
+  match x, y with
+  | L xs, L ys -> map2 ctxs xs ys op_eq
+  | x, L ys -> broadcast ~rev:false ctxs x ys op_eq
+  | L xs, y -> broadcast ~rev:true ctxs y xs op_eq
+  | x, y -> Rt.push @ B (xs_eq x y)
 
-and op_if ctxs =
+and op_lt ctxs =                (* < *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | L xs, L ys -> map2 ctxs xs ys op_lt
+  | x, L ys -> broadcast ~rev:false ctxs x ys op_lt
+  | L xs, y -> broadcast ~rev:true ctxs y xs op_lt
+  | Z x, Z y -> Rt.push @ B (x < y)
+  | Z x, R y -> Rt.push @ B (Float.(<) (float_of_int x) y)
+  | R x, R y -> Rt.push @ B (Float.(<) x y)
+  | R x, Z y -> Rt.push @ B (Float.(<) x (float_of_int y))
+  | _ -> type_err "<"
+
+and op_gt ctxs =                (* > *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | L xs, L ys -> map2 ctxs xs ys op_gt
+  | x, L ys -> broadcast ~rev:false ctxs x ys op_gt
+  | L xs, y -> broadcast ~rev:true ctxs y xs op_gt
+  | Z x, Z y -> Rt.push @ B (x > y)
+  | Z x, R y -> Rt.push @ B (Float.(>) (float_of_int x) y)
+  | R x, R y -> Rt.push @ B (Float.(>) x y)
+  | R x, Z y -> Rt.push @ B (Float.(>) x (float_of_int y))
+  | _ -> type_err "<"
+
+and op_geq ctxs =               (* gq *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | L xs, L ys -> map2 ctxs xs ys op_geq
+  | x, L ys -> broadcast ~rev:false ctxs x ys op_geq
+  | L xs, y -> broadcast ~rev:true ctxs y xs op_geq
+  | Z x, Z y -> Rt.push @ B (x >= y)
+  | Z x, R y -> Rt.push @ B (Float.(>=) (float_of_int x) y)
+  | R x, R y -> Rt.push @ B (Float.(>=) x y)
+  | R x, Z y -> Rt.push @ B (Float.(>=) x (float_of_int y))
+  | _ -> type_err "<"
+
+and op_leq ctxs =               (* lq *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | L xs, L ys -> map2 ctxs xs ys op_leq
+  | x, L ys -> broadcast ~rev:false ctxs x ys op_leq
+  | L xs, y -> broadcast ~rev:true ctxs y xs op_leq
+  | Z x, Z y -> Rt.push @ B (x <= y)
+  | Z x, R y -> Rt.push @ B (Float.(<=) (float_of_int x) y)
+  | R x, R y -> Rt.push @ B (Float.(<=) x y)
+  | R x, Z y -> Rt.push @ B (Float.(<=) x (float_of_int y))
+  | _ -> type_err "<"
+
+and op_if ctxs =                (* if *)
   let cond = Rt.pop () in
   let x = Rt.pop () in
   let y = Rt.pop () in
@@ -238,7 +294,11 @@ let builtin =
    (":",        true,   op_set);
    ("::",       true,   op_set2);
    ("=",        true,   op_eq);
-   ("if",       false,   op_if);
+   ("<",        true,   op_lt);
+   (">",        true,   op_gt);
+   ("gq",       true,   op_geq);
+   ("lq",       true,   op_leq);
+   ("if",       false,  op_if);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);
    ("neg",      false,  op_neg);   

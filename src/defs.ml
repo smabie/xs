@@ -47,7 +47,8 @@ and parse_to_string x =
   | InfixFn xs -> sprintf "{%s}" @ concat_parse xs
   | Str x -> sprintf "`%s" x
   | Ident x -> sprintf "%s" x
-  | Bool x -> sprintf "%b" x
+  | Bool true -> "1b"
+  | Bool false -> "0b"
   | Float x -> sprintf "%f" x
   | Sep -> ""
 and xs_to_string x =
@@ -55,7 +56,8 @@ and xs_to_string x =
   | Z x -> sprintf "%d" x
   | R x -> sprintf "%f" x
   | Q x -> sprintf "`%s" x
-  | B x -> sprintf "%b" x
+  | B true -> "1b"
+  | B false -> "0b"
   | S x -> sprintf "\"%s\"" x
   | L xs ->
      sprintf "[%s]" @
