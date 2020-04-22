@@ -321,7 +321,7 @@ and op_cond ctxs =              (* cond *)
          else (
            Rt.call_fn xs.(idx) ctxs;
            match Rt.pop () with
-           | B true -> Rt.call_fn xs.(idx + 1) ctxs 
+           | B true -> Rt.call_fn xs.(idx + 1) ctxs
            | B false -> go (idx + 2)
            | _ -> type_err "cond"
          ) in go 0
@@ -363,7 +363,9 @@ and op_take ctxs =              (* # *)
        ) in
      if x > 0 then go 0 0 else go (len + x) 0
   | Z x, y -> Rt.push @ L (Array.create (abs x) y)
+  | N, x -> print_endline @ xs_to_string x
   | _ -> type_err "#"
+
 
 let builtin =
   [("+",        true,   op_add);
