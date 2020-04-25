@@ -172,14 +172,15 @@ and op_dup _ = Rt.push @ Rt.peek () (* dup *)
 and op_rev _ =
   match Rt.pop () with
   | L xs ->
-     let ys = Array.empty () in
+     let len = Array.length xs in
+     let ys = Array.create len N in
      let rec go idx =
        if idx = -1 then L ys
        else (
-         Array.add_one ys xs.(idx);
+         ys.(len - idx - 1) <- xs.(idx);
          go (idx - 1)
        ) in
-     Rt.push @ go (Array.length xs - 1)
+     Rt.push @ go (len - 1)
   | _ -> type_err "rev"
 
 and op_map ctxs =               (* ' *)
@@ -213,11 +214,11 @@ and op_swap _ = Array.swap Rt.stk (Rt.convert 0) (Rt.convert 1) (* swap *)
 and op_til _ =                  (* til *)
   match Rt.pop () with
   | Z x ->
-     let xs = Array.empty () in
+     let xs = Array.create x N in
      let rec go idx =
        if idx = x then L xs
        else (
-         Array.add_one xs (Z idx);
+         xs.(idx) <- Z idx;
          go (idx + 1)
        ) in
      Rt.push @ go 0
@@ -343,12 +344,12 @@ and op_take ctxs =              (* # *)
   let y = Rt.pop () in
   match x, y with
   | Z x, L xs ->
-     let len = Array.length xs in
-     let ys = Array.empty () in
+     let len, nlen = Array.length xs, abs x in
+     let ys = Array.create nlen N in
      let rec go idx c =
-       if c = abs x then Rt.push @ L ys
+       if c = nlen then Rt.push @ L ys
        else (
-         Array.add_one ys xs.(idx mod len);
+         ys.(c) <- xs.((if idx < 0 then (len + idx) else idx) mod len);
          go (idx + 1) (c + 1)
        ) in
      if x > 0 then go 0 0 else go (len + x) 0
@@ -422,13 +423,21 @@ and op_enlist ctxs =            (* enlist *)
      go 0
   | _ -> type_err "enlist"
 
-and op_read ctxs =              (* read *)
+and op_read _ =              (* read *)
   match Rt.pop () with
   | S x ->
      In_channel.read_lines ~fix_win_eol:true x |>
        List.map ~f:(fun x -> S x) |>
        fun x -> Rt.push @ L (Array.of_list x)
   | _ -> type_err "read"
+
+and op_measure ctxs =           (* measure *)
+  match Rt.pop () with
+  | F _ as f ->
+     let t = Unix.gettimeofday ( ) in
+     Rt.call_fn f ctxs;
+     Rt.push @ R (Unix.gettimeofday () -. t)
+  | _ -> type_err "measure"
 
 let builtin =
   [("+",        true,   op_add);
@@ -470,5 +479,6 @@ let builtin =
    ("swap",     false,  op_swap);
    ("til",      false,  op_til);
    ("len",      false,  op_len);
-   ("read",      false,  op_read)
+   ("read",     false,  op_read);
+   ("measure",  false,  op_measure)
   ]
