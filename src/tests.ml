@@ -95,3 +95,5 @@ let%test _ = t "3#0"                    "[0 0 0]"
 let%test _ = t "3#[1 2 3 4]"            "[1 2 3]"
 let%test _ = t "(neg 2)#[1 2 3 4]"      "[3 4]"
 let%test _ = t "3#[1 2]"                "[1 2 1]"
+
+let%test _ = t "3 enlist 1 2 3"         "[1 2 3]"

@@ -419,6 +419,19 @@ and op_floor ctxs =             (* floor *)
   | L xs -> map ctxs xs op_floor
   | _ -> type_err "floor"
 
+and op_enlist ctxs =            (* enlist *)
+  match Rt.pop_eval ctxs with
+  | Z x ->
+     let ys = Array.empty () in
+     let rec go c =
+       if c = x then Rt.push @ L ys
+       else (
+         Array.add_one ys @ Rt.pop ();
+         go (c + 1)
+       ) in
+     go 0
+  | _ -> type_err "enlist"
+  
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -442,6 +455,7 @@ let builtin =
    (",",        true,   op_concat);
    (",,",       true,   op_cons);
    ("#",        true,   op_take);
+   ("enlist",   true,   op_enlist);
    ("ln",       false,  op_ln);
    ("sin",      false,  op_sin);
    ("cos",      false,  op_cos);
