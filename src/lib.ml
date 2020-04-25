@@ -126,16 +126,6 @@ and op_set2 ctxs =              (* :: *)
       | _ -> type_err "::")
   | _ ->  type_err "::"
 
-and op_get ctxs =               (* @ *)
-  let x = Rt.pop_eval ctxs in
-  let y = Rt.pop () in
-  match x, y  with
-  | Z idx, L xs -> Rt.push @ xs.(idx mod Array.length xs)
-  | L idxs, L xs ->
-       Rt.push @
-         L (Array.map (function | Z(idx) -> xs.(idx) | _ -> type_err ".") idxs)
-  | _ -> type_err "@"
-
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
   | F _ as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
@@ -431,7 +421,7 @@ and op_enlist ctxs =            (* enlist *)
        ) in
      go 0
   | _ -> type_err "enlist"
-  
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -442,7 +432,6 @@ let builtin =
    ("/",        true,   op_fold);
    ("\\",       true,   op_scan);
    ("'",        true,   op_map);
-   ("@",        true,   op_get);
    ("''",       true,   op_map2);
    (":",        true,   op_set);
    ("::",       true,   op_set2);
