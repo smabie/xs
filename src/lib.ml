@@ -191,13 +191,13 @@ and op_rev _ =
        ) in
      Rt.push @ go (Array.length xs - 1)
   | _ -> type_err "rev"
-  
+
 and op_map ctxs =               (* ' *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
   match f, x with
   | F _ as f, L xs ->
-     with_list ctxs @ 
+     with_list ctxs @
        fun () ->
        let rec go idx =
          if idx = -1 then ()
@@ -342,11 +342,11 @@ and op_cons ctxs =            (* ,, *)
   | L xs, y -> Rt.push @ L (Array.append xs (Array.create 1 y))
   | _ -> type_err ","
 
-and op_count _ =             (* count *)
+and op_len _ =             (* len *)
   let x = Rt.pop () in
   match x with
   | L xs -> Rt.push @ Z (Array.length xs)
-  | _ -> type_err "count"
+  | _ -> type_err "len"
 
 and op_take ctxs =              (* # *)
   let x = Rt.pop_eval ctxs in
@@ -419,7 +419,6 @@ and op_floor ctxs =             (* floor *)
   | L xs -> map ctxs xs op_floor
   | _ -> type_err "floor"
 
-
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -459,5 +458,5 @@ let builtin =
    ("drop",     false,  op_drop);
    ("swap",     false,  op_swap);
    ("til",      false,  op_til);
-   ("count",    false,  op_count)
+   ("len",      false,  op_len)
   ]

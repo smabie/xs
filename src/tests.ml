@@ -86,7 +86,7 @@ let%test _ = t "(1+til 2)@[1 2 3]"      "[2 3]"
 let%test _ = t "([1 2]),[1 0]"          "[1 2 1 0]"
 let%test _ = t "5,,[1 0]"               "[5 1 0]"
 
-let%test _ = t "count [1 2 3]"          "3"
+let%test _ = t "len [1 2 3]"            "3"
 
 let%test _ = t "cond [(1b) (1) (2)]"    "1"
 let%test _ = t "cond [(0b) (1) (2)]"    "2"
