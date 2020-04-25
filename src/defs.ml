@@ -36,7 +36,8 @@ and fn_t =
   ; instrs: (parse_val list, (string, xs_val) Hashtbl.t list -> unit) Either.t
   }
 
-let rec concat_parse xs = String.concat ~sep:" " @ List.rev_map xs parse_to_string
+let rec concat_parse xs =
+  String.concat ~sep:" " @ List.rev_map xs parse_to_string
 and parse_to_string x =
   match x with
   | Int x -> sprintf "%d" x

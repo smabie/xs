@@ -422,6 +422,14 @@ and op_enlist ctxs =            (* enlist *)
      go 0
   | _ -> type_err "enlist"
 
+and op_read ctxs =              (* read *)
+  match Rt.pop () with
+  | S x ->
+     In_channel.read_lines ~fix_win_eol:true x |>
+       List.map ~f:(fun x -> S x) |>
+       fun x -> Rt.push @ L (Array.of_list x)
+  | _ -> type_err "read"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -461,5 +469,6 @@ let builtin =
    ("drop",     false,  op_drop);
    ("swap",     false,  op_swap);
    ("til",      false,  op_til);
-   ("len",      false,  op_len)
+   ("len",      false,  op_len);
+   ("read",      false,  op_read)
   ]
