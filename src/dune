@@ -3,7 +3,7 @@
  (name xslib)
  (inline_tests)
  (flags (:standard -warn-error -a+31-6 -w -6))
- (libraries core angstrom res ppx_inline_test ppx_deriving)
+ (libraries core angstrom res ppx_inline_test ppx_deriving str)
  (preprocess (pps ppx_inline_test ppx_deriving.eq ppx_deriving.show ppx_deriving.ord))
 )
 

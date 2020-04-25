@@ -12,6 +12,7 @@ let repl () =
     Rt.display ();
     go () in
   go ()
-;;
 
-
+let load path =
+  let ctxs = [Rt.setup Lib.builtin] in
+  Rt.eval ctxs @ parse @ In_channel.read_all path

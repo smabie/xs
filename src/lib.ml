@@ -44,7 +44,8 @@ and broadcast  ~rev ctxs x ys f =
           Rt.push ys.(idx); Rt.push x;
         );
         f ctxs; go (idx - 1)
-      ) in go @ Array.length ys - 1
+      ) in
+    go @ Array.length ys - 1
 
 and op_add ctxs =               (* + *)
   let x = Rt.pop_eval ctxs in
@@ -114,6 +115,7 @@ and op_set ctxs =               (* : *)
      (match Rt.pop () with
       | L qs -> Array.iteri (fun idx q -> Rt.bind ctxs q (Rt.get idx)) qs
       | _ -> type_err ":")
+  | N -> print_endline @ xs_to_string (Rt.peek ())
   | _ ->  type_err ":"
 
 and op_set2 ctxs =              (* :: *)
@@ -124,6 +126,7 @@ and op_set2 ctxs =              (* :: *)
      (match Rt.pop () with
       | L qs -> Array.iter (fun q -> Rt.bind ctxs q (Rt.pop ())) qs
       | _ -> type_err "::")
+  | N -> print_endline @ xs_to_string (Rt.pop ())
   | _ ->  type_err "::"
 
 and op_apply ctxs =             (* . *)
@@ -315,7 +318,8 @@ and op_cond ctxs =              (* cond *)
            | B true -> Rt.call_fn xs.(idx + 1) ctxs
            | B false -> go (idx + 2)
            | _ -> type_err "cond"
-         ) in go 0
+         ) in
+       go 0
   | _ -> type_err "cond"
 
 and op_concat ctxs =            (* , *)
@@ -354,7 +358,6 @@ and op_take ctxs =              (* # *)
        ) in
      if x > 0 then go 0 0 else go (len + x) 0
   | Z x, y -> Rt.push @ L (Array.create (abs x) y)
-  | N, x -> print_endline @ xs_to_string x
   | _ -> type_err "#"
 
 and op_pow ctxs =               (* ** *)
@@ -439,6 +442,32 @@ and op_measure ctxs =           (* measure *)
      Rt.push @ R (Unix.gettimeofday () -. t)
   | _ -> type_err "measure"
 
+and op_sv ctxs =                (* sv *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | S x, L ys ->
+     Rt.push @
+       S (Array.fold_left
+            (fun b a ->
+              match b, a with
+              | "", S a -> a
+              | b, S a -> b ^ x ^ a
+              | _ -> type_err "sv") "" ys)
+  | _ -> type_err "sv"
+
+and op_vs ctxs =                (* vs *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | S x, S y ->
+     Str.split (Str.regexp x) y |>
+       List.map ~f:(fun x -> S x) |>
+       Array.of_list |>
+       fun x -> Rt.push (L x)
+  | _ -> type_err "vs"
+
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -461,6 +490,8 @@ let builtin =
    (",",        true,   op_concat);
    (",,",       true,   op_cons);
    ("#",        true,   op_take);
+   ("sv",       true,   op_sv);
+   ("vs",       true,   op_vs);
    ("enlist",   true,   op_enlist);
    ("ln",       false,  op_ln);
    ("sin",      false,  op_sin);
