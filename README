@@ -1,1 +1,16 @@
-xs is a concatenative array language inspired by kdb/+q. It's a work in progress.
+* xs
+
+xs is a concatenative array language inspired by kdb/+q under the
+public domain. It's a work in progress.
+
+* Todo
+** complete I/O interface
+** implement command-line args
+** create opam definition
+** string functions
+** add C FFI
+** better error messages
+** flesh out REPL
+** casting
+** list amend/replace/index
+** multiprocess API
