@@ -147,12 +147,18 @@ and op_fold ctxs =              (* / *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
   match f, x with
-  | F { is_oper = _; instrs = _} as f, L xs ->
-     let fn b a =
-       (match b, a with
-        | N, y -> y
-        | x, y -> Rt.push y; Rt.push x; Rt.call_fn f ctxs; Rt.pop ()) in
-     Rt.push @ Array.fold_left fn N xs
+  | F _, (L xs as l) when Array.length xs < 2 -> Rt.push l 
+  | F _ as f, L xs ->
+     let len = Array.length xs in
+     let rec go idx =
+       if idx = len then ()
+       else (
+         Rt.push xs.(idx);
+         Rt.call_fn f ctxs;
+         go (idx + 1)
+       ) in
+     Rt.push xs.(0);
+     go 1
   | _ -> type_err "/"
 
 and op_scan ctxs =              (* \ *)
@@ -437,7 +443,7 @@ and op_read _ =              (* read *)
 and op_measure ctxs =           (* measure *)
   match Rt.pop () with
   | F _ as f ->
-     let t = Unix.gettimeofday ( ) in
+     let t = Unix.gettimeofday () in
      Rt.call_fn f ctxs;
      Rt.push @ R (Unix.gettimeofday () -. t)
   | _ -> type_err "measure"

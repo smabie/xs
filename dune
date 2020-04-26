@@ -2,6 +2,19 @@
  (public_name xs)
  (name xs)
  (libraries core angstrom res xslib)
+ (modes exe byte)
  (preprocess (pps ppx_jane ppx_inline_test))
 )
 
+
+(env
+ (dev
+  (flags (:standard -warn-error -a+31-6 -w -6))
+  (ocamlopt_flags (:standard -O3 -unboxed-types)))
+ (release
+  (flags (:standard -warn-error -a+31-6 -w -6))
+  (ocamlopt_flags (:standard -O3 -unboxed-types))
+))
+  
+  
+  
