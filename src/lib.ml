@@ -467,7 +467,15 @@ and op_vs ctxs =                (* vs *)
        fun x -> Rt.push (L x)
   | _ -> type_err "vs"
 
-
+(* XXX *)
+and op_change ctxs =            (* $ *)
+  let x = Rt.pop () in
+  let y = Rt.pop () in
+  match x, y with
+  | Q "Z", S x | Q "z", S x -> Rt.push @ Z (int_of_string x)
+  | Q "R", S x | Q "r", S x -> Rt.push @ R (float_of_string x)
+  | _ -> type_err "$"
+  
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -493,6 +501,7 @@ let builtin =
    ("sv",       true,   op_sv);
    ("vs",       true,   op_vs);
    ("enlist",   true,   op_enlist);
+   ("$",        true,   op_change);
    ("ln",       false,  op_ln);
    ("sin",      false,  op_sin);
    ("cos",      false,  op_cos);
