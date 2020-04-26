@@ -165,7 +165,7 @@ and op_scan ctxs =              (* \ *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
   match f, x with
-  | F { is_oper = _; instrs = _} as f, L xs ->
+  | F _ as f, L xs ->
      let fn b a =
        (match b, a with
         | N, y -> Rt.push y; y
@@ -182,14 +182,7 @@ and op_rev _ =
   match Rt.pop () with
   | L xs ->
      let len = Array.length xs in
-     let ys = Array.create len N in
-     let rec go idx =
-       if idx = -1 then L ys
-       else (
-         ys.(len - idx - 1) <- xs.(idx);
-         go (idx - 1)
-       ) in
-     Rt.push @ go (len - 1)
+     Rt.push @ L (Array.init len (fun idx -> xs.(len - idx - 1)))
   | _ -> type_err "rev"
 
 and op_map ctxs =               (* ' *)
@@ -222,15 +215,7 @@ and op_swap _ = Array.swap Rt.stk (Rt.convert 0) (Rt.convert 1) (* swap *)
 
 and op_til _ =                  (* til *)
   match Rt.pop () with
-  | Z x ->
-     let xs = Array.create x N in
-     let rec go idx =
-       if idx = x then L xs
-       else (
-         xs.(idx) <- Z idx;
-         go (idx + 1)
-       ) in
-     Rt.push @ go 0
+  | Z x -> Rt.push @ L (Array.init x (fun idx -> Z idx))
   | _ -> type_err "til"
 
 and op_eq ctxs =                (* = *)
