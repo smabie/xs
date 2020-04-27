@@ -8,44 +8,45 @@ and map2 ctxs xs ys f =
   if Array.length xs <> Array.length ys then
     raise @ Failure "list length unequal"
   else
-    with_list ctxs @
+    with_list_rev ctxs @
       fun () ->
       let rec go idx =
-        if idx = -1 then ()
+        if idx = Array.length xs then ()
         else (
           Rt.push ys.(idx);
           Rt.push xs.(idx);
           f ctxs;
-          go (idx - 1)
+          go (idx + 1)
         ) in
-      go @ Array.length xs - 1
+      go 0
 
 and map ctxs xs f =
-  with_list ctxs @
+  with_list_rev ctxs @
     fun () ->
     let rec go idx =
-      if idx = -1 then ()
+      if idx = Array.length xs then ()
       else (
         Rt.push xs.(idx);
         f ctxs;
-        go (idx - 1)
+        go (idx + 1)
       ) in
-    go @ Array.length xs - 1
+    go 0
 
 and broadcast  ~rev ctxs x ys f =
-  with_list ctxs @
+  with_list_rev ctxs @
     fun () ->
     let rec go idx =
-      if idx = -1 then ()
+      if idx = Array.length ys then ()
       else (
         if rev then (
           Rt.push x; Rt.push ys.(idx)
         ) else (
           Rt.push ys.(idx); Rt.push x;
         );
-        f ctxs; go (idx - 1)
+        f ctxs;
+        go (idx + 1)
       ) in
-    go @ Array.length ys - 1
+    go 0
 
 and op_add ctxs =               (* + *)
   let x = Rt.pop_eval ctxs in
