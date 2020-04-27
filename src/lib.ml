@@ -249,7 +249,7 @@ and op_map2 ctxs =              (* '' *)
   | _ -> type_err "''"
 
 and op_drop _ = let _ = Rt.pop () in () (* drop *)
-and op_swap _ = Rt.swap 0 1  (* swap *)
+and op_swap _ = Rt.swap 0 1  (* ^ *)
 
 and op_til _ =                  (* til *)
   match Rt.pop () with
@@ -402,43 +402,44 @@ and op_pow ctxs =               (* ** *)
 
 and op_ln ctxs =                (* ln *)
   match Rt.pop () with
-  | Z x -> Rt.push @ R (log @ float_of_int x)
-  | R x -> Rt.push @ R (log x)
+  | Z x -> Rt.push @ R (Float.log @ float_of_int x)
+  | R x -> Rt.push @ R (Float.log x)
   | L xs -> map ctxs xs op_ln
   | _ -> type_err "ln"
 
 and op_sin ctxs =               (* sin *)
   match Rt.pop () with
-  | Z x -> Rt.push @ R (sin @ float_of_int x)
-  | R x -> Rt.push @ R (sin x)
+  | Z x -> Rt.push @ R (Float.sin @ float_of_int x)
+  | R x -> Rt.push @ R (Float.sin x)
   | L xs -> map ctxs xs op_sin
   | _ -> type_err "sin"
 
 and op_cos ctxs =               (* cos *)
   match Rt.pop () with
-  | Z x -> Rt.push @ R (cos @ float_of_int x)
-  | R x -> Rt.push @ R (cos x)
+  | Z x -> Rt.push @ R (Float.cos @ float_of_int x)
+  | R x -> Rt.push @ R (Float.cos x)
   | L xs -> map ctxs xs op_cos
   | _ -> type_err "cos"
 
 and op_tan ctxs =               (* tan *)
   match Rt.pop () with
-  | Z x -> Rt.push @ R (tan @ float_of_int x)
-  | R x -> Rt.push @ R (tan x)
+  | Z x -> Rt.push @ R (Float.tan @ float_of_int x)
+  | R x -> Rt.push @ R (Float.tan x)
   | L xs -> map ctxs xs op_cos
   | _ -> type_err "tan"
 
 and op_ceil ctxs =              (* ceil *)
   match Rt.pop () with
   | Z x -> Rt.push @ R (float_of_int x)
-  | R x -> Rt.push @ R (ceil x)
+  | R x -> Rt.push @ R (Float.round_up x)
   | L xs -> map ctxs xs op_ceil
   | _ -> type_err "ceil"
+
 
 and op_floor ctxs =             (* floor *)
   match Rt.pop () with
   | Z x -> Rt.push @ R (float_of_int x)
-  | R x -> Rt.push @ R (floor x)
+  | R x -> Rt.push @ R (Float.round_down x)
   | L xs -> map ctxs xs op_floor
   | _ -> type_err "floor"
 
@@ -489,7 +490,7 @@ and op_vs ctxs =                (* vs *)
   | _ -> type_err "vs"
 
 (* XXX *)
-and op_change ctxs =            (* $ *)
+and op_change _ =               (* $ *)
   let x = Rt.pop () in
   let y = Rt.pop () in
   match x, y with
@@ -538,7 +539,7 @@ let builtin =
    ("rev",      false,  op_rev);
    ("dup",      false,  op_dup);
    ("drop",     false,  op_drop);
-   ("swap",     false,  op_swap);
+   ("^",        false,  op_swap);
    ("til",      false,  op_til);
    ("len",      false,  op_len);
    ("read",     false,  op_read);
