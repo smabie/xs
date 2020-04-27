@@ -10,6 +10,9 @@ open Defs
  *)
 let stk = (Array.empty () : xs_val Array.t)
 
+(* list index stack. used to quickly construct lists *)
+let xstk: int Stack.t = Stack.create ()
+
 let rec is_oper ts k =
   match ts with
   | t::ts ->
@@ -26,6 +29,7 @@ let len () = Array.length stk
 let push v = Array.add_one stk v
 let pop () = let v = get 0 in Array.remove_one stk; v
 let peek () = get 0
+let dup () = push @ peek ()
 
 let rec lookup ts k =
   match ts, k with

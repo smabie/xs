@@ -4,21 +4,20 @@
  *)
 
 open Core
-open Res
 
 let (@) = (@@)
 
 let type_err s = raise @ Failure (Printf.sprintf "%s applied on invalid types" s)
 
 type xs_val =
-  | Z of int 
-  | R of float 
-  | Q of string 
-  | B of bool 
-  | S of string 
-  | F of fn_t 
-  | L of xs_val Array.t
-  | N
+  | Z of int                    (* int *)
+  | R of float                  (* real *)
+  | Q of string                 (* quote *)
+  | B of bool                   (* bool *)
+  | S of string                 (* string *)
+  | F of fn_t                   (* function *)
+  | L of xs_val Array.t         (* list *)
+  | N                           (* null *)
 and parse_val =
   | Sep 
   | Int of int 
@@ -68,24 +67,11 @@ and xs_to_string x =
   | N -> "0N"
   | _ -> ""
 
-(* append a list to an array  *)
-let res_append t xs = List.iter xs (fun x -> Array.add_one t x)
-
-let res_rev xs =
-  let ys = Array.empty () in
-  let rec go idx =
-    if idx = -1 then ys
-    else (
-      Array.add_one ys xs.(idx);
-      go (idx - 1)
-    ) in
-  go (Array.length xs - 1) 
-
 let rec xs_eq x y =
   match x, y with
   | N, N -> true
   | Z x, Z y -> x = y
-  | R x, R y -> Float.equal x y
+  | R x, R y -> Float.(abs (x - y) <= 10. ** (-5.))
   | B x, B y -> Bool.equal x y
   | S x, S y -> String.equal x y
   | Q x, Q y -> String.equal x y

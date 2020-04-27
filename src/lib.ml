@@ -1,8 +1,8 @@
 open Core
-open Res
 open Defs
 
 let rec with_list ctxs f = op_list_end ctxs; f (); op_list_begin ctxs
+and with_list_rev ctxs f = op_list_end ctxs; f (); op_list_begin_rev ctxs
 
 and map2 ctxs xs ys f =
   if Array.length xs <> Array.length ys then
@@ -113,7 +113,7 @@ and op_set ctxs =               (* : *)
   | F _ as f ->
      Rt.call_fn f ctxs;
      (match Rt.pop () with
-      | L qs -> Array.iteri (fun idx q -> Rt.bind ctxs q (Rt.get idx)) qs
+      | L qs -> Array.iteri qs (fun idx q -> Rt.bind ctxs q (Rt.get idx))
       | _ -> type_err ":")
   | N -> print_endline @ xs_to_string (Rt.peek ())
   | _ ->  type_err ":"
@@ -124,7 +124,7 @@ and op_set2 ctxs =              (* :: *)
   | F _ as f ->
      Rt.call_fn f ctxs;
      (match Rt.pop () with
-      | L qs -> Array.iter (fun q -> Rt.bind ctxs q (Rt.pop ())) qs
+      | L qs -> Array.iter qs (fun q -> Rt.bind ctxs q (Rt.pop ()))
       | _ -> type_err "::")
   | N -> print_endline @ xs_to_string (Rt.pop ())
   | _ ->  type_err "::"
@@ -134,21 +134,23 @@ and op_apply ctxs =             (* . *)
   | F _ as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
   | _ -> type_err "."
 
-and op_list_end _ = Rt.push N   (* ] *)
+and op_list_end _ = Stack.push Rt.xstk @ Rt.len ()
+  
 and op_list_begin _ =           (* [ *)
-  let xs = Array.empty () in
-  let rec go () =
-    match Rt.pop () with
-    | N -> Rt.push @ L xs
-    | x -> Array.add_one xs x; go () in
-  go ()
+  let n = Rt.len () - Stack.pop_exn Rt.xstk in
+  Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
 
+and op_list_begin_rev _ =
+  let n = Rt.len () - Stack.pop_exn Rt.xstk in
+  let xs = Array.init n ~f:(fun idx -> Rt.get (n - idx - 1)) in
+  Res.Array.remove_n Rt.stk n;
+  Rt.push @ L xs;
+  
 and op_fold ctxs =              (* / *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
   match f, x with
-  | F _, (L xs as l) when Array.length xs < 2 -> Rt.push l 
-  | F _ as f, L xs ->
+ | F _ as f, L xs ->
      let len = Array.length xs in
      let rec go idx =
        if idx = len then ()
@@ -159,6 +161,17 @@ and op_fold ctxs =              (* / *)
        ) in
      Rt.push xs.(0);
      go 1
+  | F _ as f, x ->
+     let rec go prev =
+       Rt.call_fn f ctxs;
+       let y = Rt.peek () in
+       if xs_eq x y || xs_eq prev y then ()
+       else go y in
+     Rt.push x;
+     Rt.call_fn f ctxs;
+     let y = Rt.peek () in
+     if xs_eq y x then ()
+     else go y
   | _ -> type_err "/"
 
 and op_scan ctxs =              (* \ *)
@@ -166,17 +179,42 @@ and op_scan ctxs =              (* \ *)
   let x = Rt.pop () in
   match f, x with
   | F _ as f, L xs ->
-     let fn b a =
-       (match b, a with
-        | N, y -> Rt.push y; y
-        | x, y ->
-           Rt.push y; Rt.push x;
-           Rt.call_fn f ctxs; Rt.peek ()) in
-     with_list ctxs (fun () -> let _ = Array.fold_left fn N xs in ());
-     op_rev ctxs;
+     let ys =
+       Array.init (Array.length xs)
+         ~f:(fun idx ->
+           if idx = 0 then (
+             Rt.push xs.(idx);
+             xs.(idx)
+           ) else (
+             Rt.push xs.(idx);
+             Rt.swap 0 1;
+             Rt.call_fn f ctxs;
+             Rt.peek ()
+           )
+         ) in
+     Rt.push @ L ys
+  | F _ as f, x ->
+     with_list_rev ctxs @
+       fun () ->
+       let rec go prev =
+         Rt.dup ();
+         Rt.call_fn f ctxs;
+         let y = Rt.peek () in
+         if xs_eq x y || xs_eq prev y then
+           let _ = Rt.pop () in  ()
+         else
+           go y in
+       Rt.push x;
+       Rt.dup ();
+       Rt.call_fn f ctxs;
+       let y = Rt.peek () in
+       if xs_eq y x then
+         let _ = Rt.pop () in ()
+       else go y
   | _ -> type_err "/"
 
-and op_dup _ = Rt.push @ Rt.peek () (* dup *)
+
+and op_dup _ = Rt.dup () (* dup *)
 
 and op_rev _ =
   match Rt.pop () with
@@ -211,7 +249,7 @@ and op_map2 ctxs =              (* '' *)
   | _ -> type_err "''"
 
 and op_drop _ = let _ = Rt.pop () in () (* drop *)
-and op_swap _ = Array.swap Rt.stk (Rt.convert 0) (Rt.convert 1) (* swap *)
+and op_swap _ = Rt.swap 0 1  (* swap *)
 
 and op_til _ =                  (* til *)
   match Rt.pop () with
@@ -406,15 +444,7 @@ and op_floor ctxs =             (* floor *)
 
 and op_enlist ctxs =            (* enlist *)
   match Rt.pop_eval ctxs with
-  | Z x ->
-     let ys = Array.empty () in
-     let rec go c =
-       if c = x then Rt.push @ L ys
-       else (
-         Array.add_one ys @ Rt.pop ();
-         go (c + 1)
-       ) in
-     go 0
+  | Z n -> Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
   | _ -> type_err "enlist"
 
 and op_read _ =              (* read *)
@@ -439,12 +469,12 @@ and op_sv ctxs =                (* sv *)
   match x, y with
   | S x, L ys ->
      Rt.push @
-       S (Array.fold_left
-            (fun b a ->
+       S (Array.fold ys ~init:""
+            ~f:(fun b a ->
               match b, a with
               | "", S a -> a
               | b, S a -> b ^ x ^ a
-              | _ -> type_err "sv") "" ys)
+              | _ -> type_err "sv"))
   | _ -> type_err "sv"
 
 and op_vs ctxs =                (* vs *)
@@ -503,6 +533,7 @@ let builtin =
    ("cond",     false,  op_cond);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);
+   ("x",        false,  op_list_begin_rev);
    ("neg",      false,  op_neg);
    ("rev",      false,  op_rev);
    ("dup",      false,  op_dup);
