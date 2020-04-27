@@ -9,8 +9,7 @@
 
 (env
  (dev
-  (flags (:standard -warn-error -a+31-6 -w -6))
-  (ocamlopt_flags (:standard -O3 -unboxed-types)))
+  (flags (:standard -warn-error -a+31-6 -w -6)))
  (release
   (flags (:standard -warn-error -a+31-6 -w -6))
   (ocamlopt_flags (:standard -O3 -unboxed-types))
