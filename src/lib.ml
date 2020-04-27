@@ -430,16 +430,15 @@ and op_tan ctxs =               (* tan *)
 
 and op_ceil ctxs =              (* ceil *)
   match Rt.pop () with
-  | Z x -> Rt.push @ R (float_of_int x)
-  | R x -> Rt.push @ R (Float.round_up x)
+  | Z x -> Rt.push @ Z x
+  | R x -> Rt.push @ Z (int_of_float @ Float.round_up x)
   | L xs -> map ctxs xs op_ceil
   | _ -> type_err "ceil"
 
-
 and op_floor ctxs =             (* floor *)
   match Rt.pop () with
-  | Z x -> Rt.push @ R (float_of_int x)
-  | R x -> Rt.push @ R (Float.round_down x)
+  | Z x -> Rt.push @ Z x
+  | R x -> Rt.push @ Z (int_of_float @ Float.round_down x)
   | L xs -> map ctxs xs op_floor
   | _ -> type_err "floor"
 
