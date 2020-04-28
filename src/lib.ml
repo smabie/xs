@@ -559,11 +559,18 @@ and op_vs ctxs =                (* vs *)
 and op_change _ =               (* $ *)
   let x = Rt.pop () in
   let y = Rt.pop () in
-  match x, y with
-  | Q "Z", S x | Q "z", S x -> Rt.push @ Z (int_of_string x)
-  | Q "R", S x | Q "r", S x -> Rt.push @ R (float_of_string x)
-  | _ -> type_err "$"
-  
+  Rt.push @ 
+    match x, y with
+    | Q ("Z" | "z"), S x -> Z (int_of_string x)
+    | Q ("Z" | "z"), R x -> Z (int_of_float x)
+    | Q ("R" | "r"), S x -> R (float_of_string x)
+    | Q ("R" | "r"), Z x -> R (float_of_int x)
+    | Q ("Q" | "q"), S x -> Q x
+    | Q ("S" | "s"), Q x -> S x
+    | Q ("S" | "s"), Z x -> S (Int.to_string x)
+    | Q ("S" | "s"), R x -> S (Float.to_string x)
+    | _ -> type_err "$"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
