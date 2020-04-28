@@ -396,6 +396,20 @@ and op_take ctxs =              (* # *)
   | Z x, y -> Rt.push @ L (Array.create (abs x) y)
   | _ -> type_err "#"
 
+and op_get ctxs =               (* @ *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | Z ix, L ys -> Rt.push @ ys.(ix mod Array.length ys)
+  | L ixs, L ys ->
+     Rt.push @
+       L (Array.map ixs
+            (function
+             | Z(ix) when ix < Array.length ys -> ys.(ix)
+             | Z(ix) -> N
+             | _ -> type_err "@"))
+  | _ -> type_err "@"
+  
 and op_find ctxs =              (* ? *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
@@ -442,8 +456,9 @@ and op_drop ctxs =              (* _ *)
   let y = Rt.pop () in
   match x, y with
   | Z x, L ys ->
-     let start = if x > 0 then x else Array.length ys + x in
-     Rt.push @ L (Array.slice ys start 0)
+     let start = if x > 0 then x else 0 in
+     let ends = if x > 0 then 0 else Array.length ys + x in
+     Rt.push @ L (Array.slice ys start ends)
   | _ -> type_err "_"
   
 and op_pow ctxs =               (* ** *)
@@ -599,6 +614,7 @@ let builtin =
    ("vs",       true,   op_vs);
    ("enlist",   true,   op_enlist);
    ("$",        true,   op_change);
+   ("@",        true,   op_get);
    ("where",    false,  op_where);
    ("ln",       false,  op_ln);
    ("sin",      false,  op_sin);
