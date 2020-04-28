@@ -63,7 +63,7 @@ let%test _ = t "+. dup 2"               "4"
 
 let%test _ = t "drop 2 3"               "3"
 
-let%test _ = t "^2 3"                   "3"
+let%test _ = t "swap 2 3"               "3"
 
 let%test _ = t "til 3"                  "[0 1 2]"
 
@@ -117,3 +117,5 @@ let%test _ = t "5 in [1 2 4]"           "0b"
 let%test _ = t "5 in [1 5 4]"           "1b"
 
 let%test _ = t "([1 5]) inter [1 3 5]"  "[1 5]"
+
+let%test _ = t "%$ 4 2"                 "2"

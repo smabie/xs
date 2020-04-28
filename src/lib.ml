@@ -136,13 +136,13 @@ and op_apply ctxs =             (* . *)
   | _ -> type_err "."
 
 and op_list_end _ = Stack.push Rt.xstk @ Rt.len ()
-  
+
 and op_list_begin _ =           (* [ *)
   match Stack.pop Rt.xstk with
   | Some x ->
      let n = Rt.len () - x in
      Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
-  | None ->  failwith "Cannot find stack begin marker"     
+  | None ->  failwith "Cannot find stack begin marker"
 
 and op_list_begin_rev _ =
   match Stack.pop Rt.xstk with
@@ -152,7 +152,7 @@ and op_list_begin_rev _ =
      Res.Array.remove_n Rt.stk n;
      Rt.push @ L xs;
   | None -> failwith "Cannot find stack begin marker"
-  
+
 and op_fold ctxs =              (* / *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
@@ -220,7 +220,6 @@ and op_scan ctxs =              (* \ *)
        else go y
   | _ -> type_err "/"
 
-
 and op_dup _ = Rt.dup () (* dup *)
 
 and op_rev _ =
@@ -256,7 +255,7 @@ and op_map2 ctxs =              (* '' *)
   | _ -> type_err "''"
 
 and op_drop_stk _ = let _ = Rt.pop () in () (* drop *)
-and op_swap _ = Rt.swap 0 1  (* ^ *)
+and op_swap _ = Rt.swap 0 1  (* swap *)
 
 and op_til _ =                  (* til *)
   match Rt.pop () with
@@ -409,7 +408,7 @@ and op_get ctxs =               (* @ *)
              | Z(_) -> N
              | _ -> type_err "@"))
   | _ -> type_err "@"
-  
+
 and op_find ctxs =              (* ? *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
@@ -446,7 +445,7 @@ and op_prod _ =               (* prod *)
               | x, Z y -> x * y
               | _ -> type_err "prod"))
   | _ -> type_err "prod"
-  
+
 and op_where _ =                (* where *)
   match Rt.pop () with
   | L xs ->
@@ -482,7 +481,7 @@ and op_drop ctxs =              (* _ *)
      let ends = if x > 0 then 0 else Array.length ys + x in
      Rt.push @ L (Array.slice ys start ends)
   | _ -> type_err "_"
-  
+
 and op_pow ctxs =               (* ** *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
@@ -558,7 +557,7 @@ and op_write _ =                (* write *)
        List.map ~f:(function | S x -> x | _ -> type_err "write") |>
        Out_channel.write_lines x
   | _ -> type_err "write"
-  
+
 and op_measure ctxs =           (* measure *)
   match Rt.pop () with
   | F _ as f ->
@@ -592,11 +591,10 @@ and op_vs ctxs =                (* vs *)
        fun x -> Rt.push (L x)
   | _ -> type_err "vs"
 
-(* XXX *)
-and op_cast _ =               (* $ *)
+and op_cast _ =               (* of *)
   let x = Rt.pop () in
   let y = Rt.pop () in
-  Rt.push @ 
+  Rt.push @
     match x, y with
     | Q ("Z" | "z"), S x -> Z (int_of_string x)
     | Q ("Z" | "z"), R x -> Z (int_of_float x)
@@ -624,6 +622,12 @@ and op_inter ctxs =             (* inter *)
                     ~f:(fun x -> Array.exists ys ~f:(xs_eq x)))
   | _ -> type_err "inter"
 
+and op_swap_apply ctxs =        (* $ *)
+  match Rt.pop_get ctxs with
+  | F _ as f ->
+     Rt.swap 0 1;
+     Rt.call_fn f ctxs;
+  | _ -> type_err "$"
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -651,8 +655,9 @@ let builtin =
    ("sv",       true,   op_sv);
    ("vs",       true,   op_vs);
    ("enlist",   true,   op_enlist);
-   ("$",        true,   op_cast);
+   ("of",       true,   op_cast);
    ("@",        true,   op_get);
+   ("$",        true,   op_swap_apply);
    ("in",       true,   op_in);
    ("inter",    true,   op_inter);
    ("sum",      false,  op_sum);
@@ -672,7 +677,7 @@ let builtin =
    ("rev",      false,  op_rev);
    ("dup",      false,  op_dup);
    ("drop",     false,  op_drop_stk);
-   ("^",        false,  op_swap);
+   ("swap",     false,  op_swap);
    ("til",      false,  op_til);
    ("len",      false,  op_len);
    ("read",     false,  op_read);
