@@ -37,7 +37,7 @@ let rec lookup ts k =
      (match Hashtbl.find t k with
       | Some x -> x
       | None -> lookup ts k)
-  | [], _ -> raise @ Failure (sprintf "%s not found" k)
+  | [], _ -> failwith @ sprintf "%s not found" k
 
 let pop_get ctxs =
   match pop () with
@@ -57,7 +57,7 @@ let bind_ctx t (k : string) (v : xs_val) = Hashtbl.set t k v
 let bind ts q v =
   match ts, q, v with
   | ctx :: _, Q k, v -> bind_ctx ctx k v
-  | _ -> raise @ Failure "invalid types for bind"
+  | _ -> failwith "invalid types for bind"
   
 let setup xs =
   let ctx = create_ctx () in
@@ -99,7 +99,7 @@ and  call_fn f ctxs =
   match f with
   | F { is_oper = _; instrs = Either.Second f } -> f ctxs
   | F { is_oper = _; instrs = Either.First xs } -> eval (create_ctx () :: ctxs) (Expr xs)
-  | _ -> raise @ Failure "xs_val is not a function"
+  | _ -> failwith "xs_val is not a function"
 
 let pop_eval ctxs =
   match pop_get ctxs with

@@ -7,7 +7,7 @@ open Core
 
 let (@) = (@@)
 
-let type_err s = raise @ Failure (Printf.sprintf "%s applied on invalid types" s)
+let type_err s = failwith @ Printf.sprintf "%s applied on invalid types" s
 
 type xs_val =
   | Z of int                    (* int *)
@@ -85,4 +85,3 @@ let rec xs_eq x y =
        else false in
      go 0
   | _ -> false
-            

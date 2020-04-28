@@ -6,7 +6,7 @@ and with_list_rev ctxs f = op_list_end ctxs; f (); op_list_begin_rev ctxs
 
 and map2 ctxs xs ys f =
   if Array.length xs <> Array.length ys then
-    raise @ Failure "list length unequal"
+    failwith "list length unequal"
   else
     with_list_rev ctxs @
       fun () ->
@@ -138,14 +138,20 @@ and op_apply ctxs =             (* . *)
 and op_list_end _ = Stack.push Rt.xstk @ Rt.len ()
   
 and op_list_begin _ =           (* [ *)
-  let n = Rt.len () - Stack.pop_exn Rt.xstk in
-  Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
+  match Stack.pop Rt.xstk with
+  | Some x ->
+     let n = Rt.len () - x in
+     Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
+  | None ->  failwith "Cannot find stack begin marker"     
 
 and op_list_begin_rev _ =
-  let n = Rt.len () - Stack.pop_exn Rt.xstk in
-  let xs = Array.init n ~f:(fun idx -> Rt.get (n - idx - 1)) in
-  Res.Array.remove_n Rt.stk n;
-  Rt.push @ L xs;
+  match Stack.pop Rt.xstk with
+  | Some x ->
+     let n = Rt.len () - x in
+     let xs = Array.init n ~f:(fun idx -> Rt.get (n - idx - 1)) in
+     Res.Array.remove_n Rt.stk n;
+     Rt.push @ L xs;
+  | None -> failwith "Cannot find stack begin marker"
   
 and op_fold ctxs =              (* / *)
   let f = Rt.pop_get ctxs in
@@ -337,7 +343,7 @@ and op_cond ctxs =              (* cond *)
   | L xs ->
      let len = Array.length xs in
      if len mod 2 = 0 then
-       raise @ Failure "cond list's length must be odd"
+       failwith "cond list's length must be odd"
      else
        let rec go idx =
          if idx = len - 1 then
@@ -389,6 +395,21 @@ and op_take ctxs =              (* # *)
      if x > 0 then go 0 0 else go (len + x) 0
   | Z x, y -> Rt.push @ L (Array.create (abs x) y)
   | _ -> type_err "#"
+
+and op_find ctxs =              (* ? *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  let find_idx x xs =
+    Z (match Array.findi xs (fun _ y -> xs_eq x y) with
+       | Some (idx, _) -> idx
+       | None -> Array.length xs) in
+  match x, y with
+  | L xs, L ys ->
+     Rt.push @
+       L (Array.init (Array.length xs)
+            ~f:(fun idx -> find_idx xs.(idx) ys))
+  | x, L xs -> Rt.push @ find_idx x xs
+  | _ -> type_err ""
 
 and op_pow ctxs =               (* ** *)
   let x = Rt.pop_eval ctxs in
@@ -448,14 +469,24 @@ and op_enlist ctxs =            (* enlist *)
   | Z n -> Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
   | _ -> type_err "enlist"
 
-and op_read _ =              (* read *)
+and op_read _ =                 (* read *)
   match Rt.pop () with
   | S x ->
      In_channel.read_lines ~fix_win_eol:true x |>
-       List.map ~f:(fun x -> S x) |>
-       fun x -> Rt.push @ L (Array.of_list x)
+       Array.of_list_map ~f:(fun x -> S x) |>
+       fun x -> Rt.push @ L x
   | _ -> type_err "read"
 
+and op_write _ =                (* write *)
+  let x = Rt.pop () in
+  let y = Rt.pop () in
+  match x, y with
+  | S x, L ys ->
+     Array.to_list ys |>
+       List.map ~f:(function | S x -> x | _ -> type_err "write") |>
+       Out_channel.write_lines x
+  | _ -> type_err "write"
+  
 and op_measure ctxs =           (* measure *)
   match Rt.pop () with
   | F _ as f ->
@@ -507,6 +538,7 @@ let builtin =
    (".",        true,   op_apply);
    ("/",        true,   op_fold);
    ("\\",       true,   op_scan);
+   ("?",        true,   op_find);
    ("'",        true,   op_map);
    ("''",       true,   op_map2);
    (":",        true,   op_set);
@@ -543,5 +575,6 @@ let builtin =
    ("til",      false,  op_til);
    ("len",      false,  op_len);
    ("read",     false,  op_read);
+   ("write",    false,  op_write);
    ("measure",  false,  op_measure)
   ]

@@ -107,4 +107,4 @@ let rec mk_tree expr =
 let parse s =
   match parse_string expr s with
   | Ok xs -> mk_tree xs
-  | Error s -> raise @ Sys_error s
+  | Error s -> failwith s
