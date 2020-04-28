@@ -10,41 +10,41 @@ and map2 ctxs xs ys f =
   else
     with_list_rev ctxs @
       fun () ->
-      let rec go idx =
-        if idx = Array.length xs then ()
+      let rec go ix =
+        if ix = Array.length xs then ()
         else (
-          Rt.push ys.(idx);
-          Rt.push xs.(idx);
+          Rt.push ys.(ix);
+          Rt.push xs.(ix);
           f ctxs;
-          go (idx + 1)
+          go (ix + 1)
         ) in
       go 0
 
 and map ctxs xs f =
   with_list_rev ctxs @
     fun () ->
-    let rec go idx =
-      if idx = Array.length xs then ()
+    let rec go ix =
+      if ix = Array.length xs then ()
       else (
-        Rt.push xs.(idx);
+        Rt.push xs.(ix);
         f ctxs;
-        go (idx + 1)
+        go (ix + 1)
       ) in
     go 0
 
 and broadcast  ~rev ctxs x ys f =
   with_list_rev ctxs @
     fun () ->
-    let rec go idx =
-      if idx = Array.length ys then ()
+    let rec go ix =
+      if ix = Array.length ys then ()
       else (
         if rev then (
-          Rt.push x; Rt.push ys.(idx)
+          Rt.push x; Rt.push ys.(ix)
         ) else (
-          Rt.push ys.(idx); Rt.push x;
+          Rt.push ys.(ix); Rt.push x;
         );
         f ctxs;
-        go (idx + 1)
+        go (ix + 1)
       ) in
     go 0
 
@@ -114,7 +114,7 @@ and op_set ctxs =               (* : *)
   | F _ as f ->
      Rt.call_fn f ctxs;
      (match Rt.pop () with
-      | L qs -> Array.iteri qs (fun idx q -> Rt.bind ctxs q (Rt.get idx))
+      | L qs -> Array.iteri qs (fun ix q -> Rt.bind ctxs q (Rt.get ix))
       | _ -> type_err ":")
   | N -> print_endline @ xs_to_string (Rt.peek ())
   | _ ->  type_err ":"
@@ -148,7 +148,7 @@ and op_list_begin_rev _ =
   match Stack.pop Rt.xstk with
   | Some x ->
      let n = Rt.len () - x in
-     let xs = Array.init n ~f:(fun idx -> Rt.get (n - idx - 1)) in
+     let xs = Array.init n ~f:(fun ix -> Rt.get (n - ix - 1)) in
      Res.Array.remove_n Rt.stk n;
      Rt.push @ L xs;
   | None -> failwith "Cannot find stack begin marker"
@@ -159,12 +159,12 @@ and op_fold ctxs =              (* / *)
   match f, x with
  | F _ as f, L xs ->
      let len = Array.length xs in
-     let rec go idx =
-       if idx = len then ()
+     let rec go ix =
+       if ix = len then ()
        else (
-         Rt.push xs.(idx);
+         Rt.push xs.(ix);
          Rt.call_fn f ctxs;
-         go (idx + 1)
+         go (ix + 1)
        ) in
      Rt.push xs.(0);
      go 1
@@ -188,12 +188,12 @@ and op_scan ctxs =              (* \ *)
   | F _ as f, L xs ->
      let ys =
        Array.init (Array.length xs)
-         ~f:(fun idx ->
-           if idx = 0 then (
-             Rt.push xs.(idx);
-             xs.(idx)
+         ~f:(fun ix ->
+           if ix = 0 then (
+             Rt.push xs.(ix);
+             xs.(ix)
            ) else (
-             Rt.push xs.(idx);
+             Rt.push xs.(ix);
              Rt.swap 0 1;
              Rt.call_fn f ctxs;
              Rt.peek ()
@@ -227,7 +227,7 @@ and op_rev _ =
   match Rt.pop () with
   | L xs ->
      let len = Array.length xs in
-     Rt.push @ L (Array.init len (fun idx -> xs.(len - idx - 1)))
+     Rt.push @ L (Array.init len (fun ix -> xs.(len - ix - 1)))
   | _ -> type_err "rev"
 
 and op_map ctxs =               (* ' *)
@@ -237,12 +237,12 @@ and op_map ctxs =               (* ' *)
   | F _ as f, L xs ->
      with_list ctxs @
        fun () ->
-       let rec go idx =
-         if idx = -1 then ()
+       let rec go ix =
+         if ix = -1 then ()
          else (
-           Rt.push xs.(idx);
+           Rt.push xs.(ix);
            Rt.call_fn f ctxs;
-           go (idx - 1)
+           go (ix - 1)
          ) in
        go @ Array.length xs - 1
   | _ -> type_err "'"
@@ -260,7 +260,7 @@ and op_swap _ = Rt.swap 0 1  (* ^ *)
 
 and op_til _ =                  (* til *)
   match Rt.pop () with
-  | Z x -> Rt.push @ L (Array.init x (fun idx -> Z idx))
+  | Z x -> Rt.push @ L (Array.init x (fun ix -> Z ix))
   | _ -> type_err "til"
 
 and op_eq ctxs =                (* = *)
@@ -345,14 +345,14 @@ and op_cond ctxs =              (* cond *)
      if len mod 2 = 0 then
        failwith "cond list's length must be odd"
      else
-       let rec go idx =
-         if idx = len - 1 then
+       let rec go ix =
+         if ix = len - 1 then
            Rt.call_fn xs.(len - 1) ctxs
          else (
-           Rt.call_fn xs.(idx) ctxs;
+           Rt.call_fn xs.(ix) ctxs;
            match Rt.pop () with
-           | B true -> Rt.call_fn xs.(idx + 1) ctxs
-           | B false -> go (idx + 2)
+           | B true -> Rt.call_fn xs.(ix + 1) ctxs
+           | B false -> go (ix + 2)
            | _ -> type_err "cond"
          ) in
        go 0
@@ -386,11 +386,11 @@ and op_take ctxs =              (* # *)
   | Z x, L xs ->
      let len, nlen = Array.length xs, abs x in
      let ys = Array.create nlen N in
-     let rec go idx c =
+     let rec go ix c =
        if c = nlen then Rt.push @ L ys
        else (
-         ys.(c) <- xs.((if idx < 0 then (len + idx) else idx) mod len);
-         go (idx + 1) (c + 1)
+         ys.(c) <- xs.((if ix < 0 then (len + ix) else ix) mod len);
+         go (ix + 1) (c + 1)
        ) in
      if x > 0 then go 0 0 else go (len + x) 0
   | Z x, y -> Rt.push @ L (Array.create (abs x) y)
@@ -413,16 +413,16 @@ and op_get ctxs =               (* @ *)
 and op_find ctxs =              (* ? *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  let find_idx x xs =
+  let find_ix x xs =
     Z (match Array.findi xs (fun _ y -> xs_eq x y) with
-       | Some (idx, _) -> idx
+       | Some (ix, _) -> ix
        | None -> Array.length xs) in
   match x, y with
   | L xs, L ys ->
      Rt.push @
        L (Array.init (Array.length xs)
-            ~f:(fun idx -> find_idx xs.(idx) ys))
-  | x, L xs -> Rt.push @ find_idx x xs
+            ~f:(fun ix -> find_ix xs.(ix) ys))
+  | x, L xs -> Rt.push @ find_ix x xs
   | _ -> type_err ""
 
 and op_sum _ =               (* sum *)
@@ -593,7 +593,7 @@ and op_vs ctxs =                (* vs *)
   | _ -> type_err "vs"
 
 (* XXX *)
-and op_change _ =               (* $ *)
+and op_cast _ =               (* $ *)
   let x = Rt.pop () in
   let y = Rt.pop () in
   Rt.push @ 
@@ -635,7 +635,7 @@ let builtin =
    ("sv",       true,   op_sv);
    ("vs",       true,   op_vs);
    ("enlist",   true,   op_enlist);
-   ("$",        true,   op_change);
+   ("$",        true,   op_cast);
    ("@",        true,   op_get);
    ("sum",      false,  op_sum);
    ("prod",     false,  op_prod);
