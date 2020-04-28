@@ -6,16 +6,17 @@ description:
 maintainer: ["sturm@cryptm.org"]
 authors: ["Sturm Mabie"]
 license: "ISC"
+dev-repo: "git+https://github.com/smabie/xs.git"
 homepage: "https://github.com/smabie/xs"
 bug-reports: "https://github.com/smabie/xs/issues"
 depends: [
-  "ocaml" {any}
-  "dune" {any}
-  "core" {any}
-  "angstrom" {any}
-  "res" {any}
-  "ppx_jane" {any}
-  "ppx_inline_tests" {any}
+  "ocaml"
+  "dune"
+  "core"
+  "angstrom"
+  "res"
+  "ppx_jane"
+  "ppx_inline_tests"
 ]
 build: [
   ["dune" "subst"] {pinned}
@@ -31,4 +32,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/smabie/xs.git"
+
