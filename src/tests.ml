@@ -104,3 +104,8 @@ let%test _ = t "\",\" vs \"a,b\""       "[\"a\" \"b\"]"
 
 let%test _ = t "2?[5 2 7]"              "1"
 let%test _ = t "([2 2 7])?[5 2 7]"      "[1 1 2]"
+
+let%test _ = t "where [2 0 1]"          "[0 0 2]"
+
+let%test _ = t "2_til 5"                "[2 3 4]"
+let%test _ = t "(neg 2)_til 5"          "[3 4]"

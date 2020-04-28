@@ -255,7 +255,7 @@ and op_map2 ctxs =              (* '' *)
   | F _ as f, L xs, L ys -> map2 ctxs xs ys (Rt.call_fn f)
   | _ -> type_err "''"
 
-and op_drop _ = let _ = Rt.pop () in () (* drop *)
+and op_drop_stk _ = let _ = Rt.pop () in () (* drop *)
 and op_swap _ = Rt.swap 0 1  (* ^ *)
 
 and op_til _ =                  (* til *)
@@ -411,6 +411,41 @@ and op_find ctxs =              (* ? *)
   | x, L xs -> Rt.push @ find_idx x xs
   | _ -> type_err ""
 
+and op_where _ =                (* where *)
+  match Rt.pop () with
+  | L xs ->
+     let n =
+       Array.fold xs ~init:0
+         ~f:(fun x y ->
+           match x, y with
+           | x, Z y -> x + y
+           | x, B b -> x + Bool.to_int b
+           | _ -> type_err "where") in
+     let ys = Array.create n N in
+     let rec go iy ix =
+       if ix = Array.length xs then L ys
+       else (
+         let x =
+           match xs.(ix) with
+           | Z x -> x
+           | _ -> type_err "where" in
+         for i = iy to iy + x - 1 do
+           ys.(i) <- Z ix
+         done;
+         go (iy + x) (ix + 1)
+       ) in
+     Rt.push @ go 0 0
+  | _ -> type_err "where"
+
+and op_drop ctxs =              (* _ *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | Z x, L ys ->
+     let start = if x > 0 then x else Array.length ys + x in
+     Rt.push @ L (Array.slice ys start 0)
+  | _ -> type_err "_"
+  
 and op_pow ctxs =               (* ** *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
@@ -552,10 +587,12 @@ let builtin =
    (",",        true,   op_concat);
    (",,",       true,   op_cons);
    ("#",        true,   op_take);
+   ("_",        true,   op_drop);
    ("sv",       true,   op_sv);
    ("vs",       true,   op_vs);
    ("enlist",   true,   op_enlist);
    ("$",        true,   op_change);
+   ("where",    false,  op_where);
    ("ln",       false,  op_ln);
    ("sin",      false,  op_sin);
    ("cos",      false,  op_cos);
@@ -570,7 +607,7 @@ let builtin =
    ("neg",      false,  op_neg);
    ("rev",      false,  op_rev);
    ("dup",      false,  op_dup);
-   ("drop",     false,  op_drop);
+   ("drop",     false,  op_drop_stk);
    ("^",        false,  op_swap);
    ("til",      false,  op_til);
    ("len",      false,  op_len);
