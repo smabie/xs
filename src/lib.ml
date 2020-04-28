@@ -620,9 +620,10 @@ and op_inter ctxs =             (* inter *)
   let y = Rt.pop () in
   match x, y with
   | L xs, L ys ->
-     Rt.push @ L (Array.filter xs ~f:(fun x -> Array.exists ys ~f:(xs_eq x)))
+     Rt.push @ L (Array.filter xs
+                    ~f:(fun x -> Array.exists ys ~f:(xs_eq x)))
   | _ -> type_err "inter"
-  
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
