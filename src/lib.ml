@@ -406,7 +406,7 @@ and op_get ctxs =               (* @ *)
        L (Array.map ixs
             (function
              | Z(ix) when ix < Array.length ys -> ys.(ix)
-             | Z(ix) -> N
+             | Z(_) -> N
              | _ -> type_err "@"))
   | _ -> type_err "@"
   
@@ -425,6 +425,28 @@ and op_find ctxs =              (* ? *)
   | x, L xs -> Rt.push @ find_idx x xs
   | _ -> type_err ""
 
+and op_sum _ =               (* sum *)
+  match Rt.pop () with
+  | L xs ->
+     Rt.push @
+       Z (Array.fold xs ~init:0
+            ~f:(fun x y ->
+              match x, y with
+              | x, Z y -> x + y
+              | _ -> type_err "sum"))
+  | _ -> type_err "sum"
+
+and op_prod _ =               (* prod *)
+  match Rt.pop () with
+  | L xs ->
+     Rt.push @
+       Z (Array.fold xs ~init:1
+            ~f:(fun x y ->
+              match x, y with
+              | x, Z y -> x * y
+              | _ -> type_err "prod"))
+  | _ -> type_err "prod"
+  
 and op_where _ =                (* where *)
   match Rt.pop () with
   | L xs ->
@@ -615,6 +637,8 @@ let builtin =
    ("enlist",   true,   op_enlist);
    ("$",        true,   op_change);
    ("@",        true,   op_get);
+   ("sum",      false,  op_sum);
+   ("prod",     false,  op_prod);
    ("where",    false,  op_where);
    ("ln",       false,  op_ln);
    ("sin",      false,  op_sin);
