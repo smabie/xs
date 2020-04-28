@@ -608,6 +608,21 @@ and op_cast _ =               (* $ *)
     | Q ("S" | "s"), R x -> S (Float.to_string x)
     | _ -> type_err "$"
 
+and op_in ctxs =                   (* in *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | x, L ys -> Rt.push @ B (Array.exists ys ~f:(xs_eq x))
+  | _ -> type_err "in"
+
+and op_inter ctxs =             (* inter *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | L xs, L ys ->
+     Rt.push @ L (Array.filter xs ~f:(fun x -> Array.exists ys ~f:(xs_eq x)))
+  | _ -> type_err "inter"
+  
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -637,6 +652,8 @@ let builtin =
    ("enlist",   true,   op_enlist);
    ("$",        true,   op_cast);
    ("@",        true,   op_get);
+   ("in",       true,   op_in);
+   ("inter",    true,   op_inter);
    ("sum",      false,  op_sum);
    ("prod",     false,  op_prod);
    ("where",    false,  op_where);
@@ -659,5 +676,4 @@ let builtin =
    ("len",      false,  op_len);
    ("read",     false,  op_read);
    ("write",    false,  op_write);
-   ("measure",  false,  op_measure)
-  ]
+   ("measure",  false,  op_measure)]

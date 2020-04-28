@@ -113,3 +113,7 @@ let%test _ = t "(neg 2)_til 5"          "[0 1 2]"
 let%test _ = t "sum til 4"              "6"
 let%test _ = t "prod [1 2 3]"           "6"
 
+let%test _ = t "5 in [1 2 4]"           "0b"
+let%test _ = t "5 in [1 5 4]"           "1b"
+
+let%test _ = t "([1 5]) inter [1 3 5]"  "[1 5]"
