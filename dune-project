@@ -10,13 +10,7 @@
 
 (package
  (name xs)
- (synopsis "xs is a concatenative array language inspired by kdb+/q")
- (description "xs is a unique concatenative language that aims to match the power of q with more flexibility and expressiveness.")
+ (synopsis "Xs is a concatenative array language inspired by kdb+/q")
+ (description "Xs is a unique concatenative language that aims to match the power of q with more flexibility and expressiveness")
  (depends
-  (ocaml :any)
-  (dune :any)
-  (core :any)
-  (angstrom :any)
-  (res :any)
-  (ppx_jane :any)
-  (ppx_inline_tests :any)))
+  ocaml dune core angstrom res ppx_jane ppx_inline_test))
