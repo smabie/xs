@@ -1,3 +1,3 @@
 #!/bin/sh
 
-rlwrap -a dune exec ./xs.exe --profile=release
+rlwrap -a dune exec ./xs.exe $@  --profile=release 

@@ -1,8 +1,7 @@
-
 open Core
 
 open Defs
-open Parser  
+open Parser
 
 let repl () =
   let ctxs = [Rt.setup Lib.builtin] in
@@ -12,9 +11,13 @@ let repl () =
     Rt.eval ctxs @ parse @ In_channel.(input_line_exn stdin);
     Rt.display ();
     go () in
-  go ()
+  try go () with
+  | exn ->
+     print_endline @ Exn.to_string exn;
+     Res.Array.clear Rt.stk;
+     Stack.clear Rt.xstk;
+     go ()
 
 let load path =
   let ctxs = [Rt.setup Lib.builtin] in
   Rt.eval ctxs @ parse @ In_channel.read_all path
-
