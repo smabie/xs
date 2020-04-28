@@ -610,7 +610,6 @@ let builtin =
    ("cond",     false,  op_cond);
    ("]",        false,  op_list_end);
    ("[",        false,  op_list_begin);
-   ("x",        false,  op_list_begin_rev);
    ("neg",      false,  op_neg);
    ("rev",      false,  op_rev);
    ("dup",      false,  op_dup);
