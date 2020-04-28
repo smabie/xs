@@ -9,6 +9,7 @@ license: "ISC"
 homepage: "https://github.com/smabie/xs"
 bug-reports: "https://github.com/smabie/xs/issues"
 depends: [
+  "ocaml" {any}
   "dune" {any}
   "core" {any}
   "angstrom" {any}

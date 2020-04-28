@@ -13,6 +13,7 @@
  (synopsis "xs is a concatenative array language inspired by kdb+/q")
  (description "xs is a unique concatenative language that aims to match the power of q with more flexibility and expressiveness.")
  (depends
+  (ocaml :any)
   (dune :any)
   (core :any)
   (angstrom :any)
