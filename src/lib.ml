@@ -620,10 +620,10 @@ let builtin =
    ("?",        true,   op_find);
    ("'",        true,   op_map);
    ("''",       true,   op_map2);
-   (":",        true,   op_set);
-   ("::",       true,   op_set2);
-   ("=",        true,   op_eq);
-   ("~",        true,   op_trues);
+   ("~",        true,   op_set);
+   (":",        true,   op_set2);
+   ("==",       true,   op_eq);
+   ("=",        true,   op_trues);
    ("<",        true,   op_lt);
    (">",        true,   op_gt);
    ("gq",       true,   op_geq);
