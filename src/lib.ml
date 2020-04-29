@@ -573,6 +573,13 @@ and op_floor ctxs =             (* floor *)
   | L xs -> map ctxs xs op_floor
   | _ -> type_err "floor"
 
+and op_abs ctxs =               (* abs *)
+  match Rt.pop () with
+  | Z x -> Rt.push @ Z (Int.abs x)
+  | R x -> Rt.push @ R (Float.abs x)
+  | L xs -> map ctxs xs op_abs
+  | _ -> type_err "abs"
+
 and op_enlist ctxs =            (* enlist *)
   match Rt.pop_eval ctxs with
   | Z n -> Rt.push @ L (Array.init n (fun _ -> Rt.pop ()))
@@ -815,6 +822,7 @@ let builtin =
    ("cos",      false,  op_cos);
    ("tan",      false,  op_tan);
    ("floor",    false,  op_floor);
+   ("abs",      false, op_abs);
    ("ceil",     false,  op_ceil);
    ("if",       false,  op_if);
    ("cond",     false,  op_cond);
