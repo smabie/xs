@@ -131,3 +131,12 @@ let%test _ = t "([1 5]) inter [1 3 5]"  "[1 5]"
 let%test _ = t "\"ab\" inter \"ac\""    "\"a\""
 
 let%test _ = t "%$ 2 4"                 "2"
+
+let%test _ = t "type 1"                 "`Z"
+let%test _ = t "type 1.0"               "`R"
+let%test _ = t "type til 2"             "`L"
+let%test _ = t "type 1b"                "`B"
+let%test _ = t "type `a"                "`Q"
+let%test _ = t "type ()"                "`F"
+let%test _ = t "type 0n"                "`N"
+let%test _ = t "type \"\""              "`S"

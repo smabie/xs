@@ -1,5 +1,5 @@
 (* defs.ml *)
-(* 
+(*
  * This file is public domain as declared by Sturm Mabie
  *)
 
@@ -8,6 +8,7 @@ open Core
 let (@) = (@@)
 
 let type_err s = failwith @ Printf.sprintf "%s applied on invalid types" s
+
 
 type xs_val =
   | Z of int                    (* int *)
@@ -19,17 +20,17 @@ type xs_val =
   | L of xs_val Array.t         (* list *)
   | N                           (* null *)
 and parse_val =
-  | Sep 
-  | Int of int 
-  | Float of float 
-  | Quote of string 
-  | Ident of string 
-  | Bool of bool 
-  | Null 
-  | Str of string 
-  | Fn of parse_val list 
-  | InfixFn of parse_val list 
-  | Expr of parse_val list 
+  | Sep
+  | Int of int
+  | Float of float
+  | Quote of string
+  | Ident of string
+  | Bool of bool
+  | Null
+  | Str of string
+  | Fn of parse_val list
+  | InfixFn of parse_val list
+  | Expr of parse_val list
 and fn_t =
   { is_oper: bool
   ; instrs: (parse_val list, (string, xs_val) Hashtbl.t list -> unit) Either.t

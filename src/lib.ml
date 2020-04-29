@@ -64,8 +64,7 @@ and op_add ctxs =               (* + *)
   | L xs, L ys -> map2 ctxs xs ys op_add
   | x, L ys -> broadcast ~rev:false ctxs x ys op_add
   | L ys, x -> broadcast ~rev:true ctxs x ys op_add
-  | _ ->
-     type_err "+"
+  | _ -> type_err "+"
 
 and op_sub ctxs =               (* - *)
   let x = Rt.pop_eval ctxs in
@@ -680,6 +679,19 @@ and op_swap_apply ctxs =        (* $ *)
      Rt.swap 0 1;
      Rt.call_fn f ctxs;
   | _ -> type_err "$"
+
+and op_type _ =              (* type *)
+  Rt.push @
+    match Rt.pop () with
+    | Z _  -> Q "Z"
+    | R _ -> Q "R"
+    | B _ -> Q "B"
+    | S _ -> Q "S"
+    | L _ -> Q "L"
+    | Q _ -> Q "Q"
+    | F _ -> Q "F"
+    | N -> Q "N"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -736,4 +748,5 @@ let builtin =
    ("len",      false,  op_len);
    ("read",     false,  op_read);
    ("write",    false,  op_write);
+   ("type",     false,  op_type);
    ("measure",  false,  op_measure)]
