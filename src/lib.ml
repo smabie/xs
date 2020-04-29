@@ -167,6 +167,7 @@ and op_fold ctxs =              (* / *)
        if ix = len then ()
        else (
          Rt.push xs.(ix);
+         Rt.swap 0 1;
          Rt.call_fn f ctxs;
          go (ix + 1)
        ) in
