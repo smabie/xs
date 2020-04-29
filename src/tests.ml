@@ -144,3 +144,8 @@ let%test _ = t "2 cut til 4"            "[[0 1] [2 3]]"
 let%test _ = t "([2 3])cut til 4"       "[[2] [3]]"
 let%test _ = t "2 cut \"abc\""          "[\"ab\" \"c\"]"
 let%test _ = t "([2 3])cut \"abcd\""    "[\"c\" \"d\"]"
+
+let%test _ = t "flip [1 2]"             "[[1] [2]]"
+let%test _ = t "flip [[1 2][3 4]]"      "[[1 3] [2 4]]"
+let%test _ = t "flip \"\""              "[]"
+let%test _ = t "flip [\"ab\" \"bc\"]"   "[\"ab\" \"bc\"]"

@@ -740,6 +740,36 @@ and op_cut ctxs =               (* cut *)
               S (String.slice x s e)))
     | _ -> type_err "cut"
 
+and op_flip _ =                 (* flip *)
+  let x = Rt.pop () in
+  Rt.push @
+    match x with
+    | L xs when Array.length xs > 0 ->
+       (match xs.(0) with
+        | L ys ->
+           let xlen = Array.length ys in
+           let ylen = Array.length xs in
+           L (Array.init xlen
+                (fun ix ->
+                  L (Array.init ylen
+                    (fun iy ->
+                      match xs.(iy) with
+                      | L zs -> zs.(ix)
+                      | _ -> type_err "flip"))))
+        | S y ->
+           let xlen = String.length y in
+           let ylen = Array.length xs in
+           L (Array.init xlen
+                (fun ix ->
+                  S (String.init ylen
+                       (fun iy ->
+                         match xs.(iy) with
+                         | S z -> String.get z ix
+                         | _ -> type_err "flip"))))
+        | _ -> L (Array.map xs (fun x -> L [|x|])))
+    | S x -> L (Array.map (String.to_array x) (fun c -> S (Char.to_string c)))
+    | _ -> type_err "flip"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -773,6 +803,7 @@ let builtin =
    ("in",       true,   op_in);
    ("inter",    true,   op_inter);
    ("cut",      true,   op_cut);
+   ("flip",     false,  op_flip);
    ("sum",      false,  op_sum);
    ("prod",     false,  op_prod);
    ("sums",     false,  op_sums);
