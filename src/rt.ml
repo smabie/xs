@@ -3,9 +3,9 @@ open Res
 
 open Defs
 
-(* 
+(*
  * Unfortunately, OCaml makes is unnecessarily difficult to create modules that
- * are mutually recursive. As such, for simplicity, we just throw all the 
+ * are mutually recursive. As such, for simplicity, we just throw all the
  * functions we need into this Rt module.
  *)
 let stk = (Array.empty () : xs_val Array.t)
@@ -47,7 +47,7 @@ let pop_get ctxs =
 let peek_get ctxs =
   match peek () with
   | Q x -> lookup ctxs x
-  | x -> x 
+  | x -> x
 
 let create_builtin_fn ~is_oper  f = F { is_oper; instrs = Either.Second f }
 let create_fn ~is_oper xs = F { is_oper; instrs = Either.First xs }
@@ -58,7 +58,7 @@ let bind ts q v =
   match ts, q, v with
   | ctx :: _, Q k, v -> bind_ctx ctx k v
   | _ -> failwith "invalid types for bind"
-  
+
 let setup xs =
   let ctx = create_ctx () in
   List.iter xs
@@ -89,7 +89,7 @@ let rec eval ctxs x =
   | Expr xs -> Array.of_list xs |> swap_opers ctxs |> Array.iter (eval ctxs)
   | Ident x ->
      (match lookup ctxs x with
-      | F _ as f -> call_fn f ctxs 
+      | F _ as f -> call_fn f ctxs
       | x -> push x)
   | Fn xs -> push @ F { is_oper = false; instrs = Either.First xs }
   | InfixFn xs -> push @ F { is_oper = true; instrs = Either.First xs }
@@ -107,4 +107,6 @@ let pop_eval ctxs =
   | x -> x
 
 let display () =
-  Array.iteri (fun idx x -> printf "%d: %s\n" idx @ xs_to_string x) stk
+  Array.iteri
+    (fun idx x -> printf "%d: %s\n" (len () - idx - 1) @ xs_to_string x)
+    stk
