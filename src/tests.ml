@@ -119,6 +119,8 @@ let%test _ = t "(neg 2)_\"abc\""        "\"a\""
 
 let%test _ = t "sum til 4"              "6"
 let%test _ = t "prod [1 2 3]"           "6"
+let%test _ = t "sums til 3"             "[0 1 3]"
+let%test _ = t "prods [1 2 3]"          "[1 2 6]"
 
 let%test _ = t "5 in [1 2 4]"           "0b"
 let%test _ = t "5 in [1 5 4]"           "1b"

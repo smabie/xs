@@ -4,6 +4,9 @@ open Defs
 let rec with_list ctxs f = op_list_end ctxs; f (); op_list_begin ctxs
 and with_list_rev ctxs f = op_list_end ctxs; f (); op_list_begin_rev ctxs
 
+(* it doesn't matter whether is_oper is true or false at this stage *)
+and make_builtin f = F { is_oper = false; instrs = Either.Second f }
+
 and map2 ctxs xs ys f =
   if Array.length xs <> Array.length ys then
     failwith "list length unequal"
@@ -39,9 +42,11 @@ and broadcast  ~rev ctxs x ys f =
       if ix = Array.length ys then ()
       else (
         if rev then (
-          Rt.push x; Rt.push ys.(ix)
+          Rt.push x;
+          Rt.push ys.(ix)
         ) else (
-          Rt.push ys.(ix); Rt.push x;
+          Rt.push ys.(ix);
+          Rt.push x;
         );
         f ctxs;
         go (ix + 1)
@@ -186,8 +191,9 @@ and op_scan ctxs =              (* \ *)
   let x = Rt.pop () in
   match f, x with
   | F _ as f, L xs ->
+     let len = Array.length xs in
      let ys =
-       Array.init (Array.length xs)
+       Array.init len
          (fun ix ->
            if ix = 0 then (
              Rt.push xs.(ix);
@@ -196,7 +202,7 @@ and op_scan ctxs =              (* \ *)
              Rt.push xs.(ix);
              Rt.swap 0 1;
              Rt.call_fn f ctxs;
-             Rt.peek ()
+             if ix = len - 1 then Rt.pop () else Rt.peek ()
            )
          ) in
      Rt.push @ L ys
@@ -454,27 +460,21 @@ and op_find ctxs =              (* ? *)
               | None -> Z (String.length y)))
   | _ -> type_err ""
 
-and op_sum _ =               (* sum *)
-  match Rt.pop () with
-  | L xs ->
-     Rt.push @
-       Z (Array.fold xs ~init:0
-            ~f:(fun x y ->
-              match x, y with
-              | x, Z y -> x + y
-              | _ -> type_err "sum"))
-  | _ -> type_err "sum"
+and op_sum ctxs =               (* sum *)
+  Rt.push @ make_builtin op_add;
+  op_fold ctxs;
 
-and op_prod _ =               (* prod *)
-  match Rt.pop () with
-  | L xs ->
-     Rt.push @
-       Z (Array.fold xs ~init:1
-            ~f:(fun x y ->
-              match x, y with
-              | x, Z y -> x * y
-              | _ -> type_err "prod"))
-  | _ -> type_err "prod"
+and op_prod ctxs =              (* prod *)
+  Rt.push @ make_builtin op_mul;
+  op_fold ctxs;
+
+and op_sums ctxs =              (* sums *)
+  Rt.push @ make_builtin op_add;
+  op_scan ctxs;
+
+and op_prods ctxs =             (* prods *)
+  Rt.push @ make_builtin op_mul;
+  op_scan ctxs;
 
 and op_where _ =                (* where *)
   match Rt.pop () with
@@ -714,6 +714,8 @@ let builtin =
    ("inter",    true,   op_inter);
    ("sum",      false,  op_sum);
    ("prod",     false,  op_prod);
+   ("sums",     false,  op_sums);
+   ("prods",    false,  op_prods);
    ("where",    false,  op_where);
    ("ln",       false,  op_ln);
    ("sin",      false,  op_sin);
