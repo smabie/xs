@@ -223,11 +223,13 @@ and op_scan ctxs =              (* \ *)
 and op_dup _ = Rt.dup () (* dup *)
 
 and op_rev _ =
-  match Rt.pop () with
-  | L xs ->
-     let len = Array.length xs in
-     Rt.push @ L (Array.init len (fun ix -> xs.(len - ix - 1)))
-  | _ -> type_err "rev"
+  Rt.push @
+    match Rt.pop () with
+    | L xs ->
+       let len = Array.length xs in
+       L (Array.init len (fun ix -> xs.(len - ix - 1)))
+    | S x -> S (String.rev x)
+    | _ -> type_err "rev"
 
 and op_map ctxs =               (* ' *)
   let f = Rt.pop_get ctxs in
@@ -374,9 +376,11 @@ and op_cons ctxs =            (* ,, *)
 
 and op_len _ =             (* len *)
   let x = Rt.pop () in
-  match x with
-  | L xs -> Rt.push @ Z (Array.length xs)
-  | _ -> type_err "len"
+  Rt.push @
+    match x with
+    | L xs -> Z (Array.length xs)
+    | S x -> Z (String.length x)
+    | _ -> type_err "len"
 
 and op_take ctxs =              (* # *)
   let x = Rt.pop_eval ctxs in
@@ -392,22 +396,41 @@ and op_take ctxs =              (* # *)
          go (ix + 1) (c + 1)
        ) in
      if x > 0 then go 0 0 else go (len + x) 0
+  | Z x, S y ->
+     let len, nlen = String.length y, abs x in
+     let ys = Array.create nlen '0' in
+     let rec go ix c =
+       if c = nlen then Rt.push @ S (String.of_char_list (Array.to_list ys))
+       else (
+         ys.(c) <- String.get y @ (if ix < 0 then
+                                     len + ix else ix) mod len;
+         go (ix + 1) (c + 1)
+       ) in
+     if x > 0 then go 0 0 else go (len + x) 0
   | Z x, y -> Rt.push @ L (Array.create (abs x) y)
   | _ -> type_err "#"
 
 and op_get ctxs =               (* @ *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  match x, y with
-  | Z ix, L ys -> Rt.push @ ys.(ix mod Array.length ys)
-  | L ixs, L ys ->
-     Rt.push @
+  Rt.push @
+    match x, y with
+    | Z ix, L ys -> ys.(ix mod Array.length ys)
+    | L ixs, L ys ->
        L (Array.map ixs
             (function
-             | Z(ix) when ix < Array.length ys -> ys.(ix)
-             | Z(_) -> N
+             | Z ix when ix < Array.length ys -> ys.(ix)
+             | Z _ -> N
              | _ -> type_err "@"))
-  | _ -> type_err "@"
+    | Z ix, S x -> S (Char.to_string @ String.get x ix)
+    | L ixs, S x ->
+       L (Array.map ixs
+            (function
+             | Z ix when ix < String.length x ->
+                S (Char.to_string @ String.get x ix)
+             | Z _ -> N
+             | _ -> type_err "@"))
+    | _ -> type_err "@"
 
 and op_find ctxs =              (* ? *)
   let x = Rt.pop_eval ctxs in
@@ -416,12 +439,19 @@ and op_find ctxs =              (* ? *)
     Z (match Array.findi xs (fun _ y -> xs_eq x y) with
        | Some (ix, _) -> ix
        | None -> Array.length xs) in
-  match x, y with
-  | L xs, L ys ->
-     Rt.push @
+  Rt.push @
+    match x, y with
+    | L xs, L ys ->
        L (Array.init (Array.length xs)
             ~f:(fun ix -> find_ix xs.(ix) ys))
-  | x, L xs -> Rt.push @ find_ix x xs
+    | x, L xs -> find_ix x xs
+    | S x, S y ->
+       L (Array.init (String.length x)
+            ~f:(fun ix ->
+              match String.lfindi ~pos:0 y
+                      ~f:(fun _ yc -> Char.equal (String.get x ix) yc) with
+              | Some x -> Z x
+              | None -> Z (String.length y)))
   | _ -> type_err ""
 
 and op_sum _ =               (* sum *)
@@ -475,12 +505,21 @@ and op_where _ =                (* where *)
 and op_drop ctxs =              (* _ *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  match x, y with
-  | Z x, L ys ->
-     let start = if x > 0 then x else 0 in
-     let ends = if x > 0 then 0 else Array.length ys + x in
-     Rt.push @ L (Array.slice ys start ends)
-  | _ -> type_err "_"
+  let bounds x len =
+    let s = if x > 0 then x else 0 in
+    let e = if x > 0 then 0 else len + x in
+    s, e in
+  Rt.push @
+    match x, y with
+    | Z x, L ys when abs x < Array.length ys ->
+       let s, e = bounds x @ Array.length ys in
+       L (Array.slice ys s e)
+    | Z x, S y when abs x < String.length y ->
+       let s, e = bounds x @ String.length y in
+       S (String.slice y s e)
+    | Z _, L _ -> L [||]
+    | Z _, S _ -> S ""
+    | _ -> type_err "_"
 
 and op_pow ctxs =               (* ** *)
   let x = Rt.pop_eval ctxs in
@@ -604,6 +643,9 @@ and op_cast _ =               (* of *)
     | Q ("S" | "s"), Q x -> S x
     | Q ("S" | "s"), Z x -> S (Int.to_string x)
     | Q ("S" | "s"), R x -> S (Float.to_string x)
+    | Q ("L" | "l"), S x ->
+       L (Array.map (String.to_array x)
+            ~f:(fun x -> S (Char.to_string x)))
     | _ -> type_err "$"
 
 and op_in ctxs =                   (* in *)

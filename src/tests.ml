@@ -58,6 +58,7 @@ let%test _ = t "(2+)'[1 2]"             "[3 4]"
 let%test _ = t "(+.)''[1 2] [2 1]"      "[3 3]"
 
 let%test _ = t "rev [2 1]"              "[1 2]"
+let%test _ = t "rev \"123\""            "\"321\""
 
 let%test _ = t "+. dup 2"               "4"
 
@@ -95,6 +96,9 @@ let%test _ = t "3#0"                    "[0 0 0]"
 let%test _ = t "3#[1 2 3 4]"            "[1 2 3]"
 let%test _ = t "(neg 2)#[1 2 3 4]"      "[3 4]"
 let%test _ = t "3#[1 2]"                "[1 2 1]"
+let%test _ = t "3#\"ab\""               "\"aba\""
+let%test _ = t "0#\"a\""                "\"\""
+let%test _ = t "(neg 2)#\"abc\""        "\"bc\""
 
 let%test _ = t "3 enlist 1 2 3"         "[1 2 3]"
 
@@ -109,6 +113,9 @@ let%test _ = t "where [2 0 1]"          "[0 0 2]"
 
 let%test _ = t "2_til 5"                "[2 3 4]"
 let%test _ = t "(neg 2)_til 5"          "[0 1 2]"
+let%test _ = t "4_til 2"                "[]"
+let%test _ = t "2_\"abc\""              "\"c\""
+let%test _ = t "(neg 2)_\"abc\""        "\"a\""
 
 let%test _ = t "sum til 4"              "6"
 let%test _ = t "prod [1 2 3]"           "6"
@@ -118,4 +125,4 @@ let%test _ = t "5 in [1 5 4]"           "1b"
 
 let%test _ = t "([1 5]) inter [1 3 5]"  "[1 5]"
 
-let%test _ = t "%$ 2 p"                 "2"
+let%test _ = t "%$ 2 4"                 "2"
