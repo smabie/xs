@@ -122,7 +122,10 @@ let%test _ = t "prod [1 2 3]"           "6"
 
 let%test _ = t "5 in [1 2 4]"           "0b"
 let%test _ = t "5 in [1 5 4]"           "1b"
+let%test _ = t "([1 2]) in [1 3 4]"     "[1b 0b]"
+let%test _ = t "\"ab\" in \"ac\""       "[1b 0b]"
 
 let%test _ = t "([1 5]) inter [1 3 5]"  "[1 5]"
+let%test _ = t "\"ab\" inter \"ac\""    "\"a\""
 
 let%test _ = t "%$ 2 4"                 "2"

@@ -9,7 +9,7 @@ let command =
   Command.basic
     ~summary:"Public domain xs interpreter"
     ~readme:(fun () ->
-{|This is the main binary for the xs language. For more information information 
+{|This is the main binary for the xs language. For more information information
 check out the project's github page at http://github.com/smabie/xs|}
     )
     Command.Let_syntax.(
@@ -26,4 +26,3 @@ http://github.com/smabie/xs|};
 
 let () =
   Command.run ~version:"0.1" ~build_info:"" command
-

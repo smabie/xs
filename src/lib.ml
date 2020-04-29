@@ -141,14 +141,14 @@ and op_list_begin _ =           (* [ *)
   match Stack.pop Rt.xstk with
   | Some x ->
      let n = Rt.len () - x in
-     Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
+     Rt.push @ L (Array.init n (fun _ -> Rt.pop ()))
   | None ->  failwith "Cannot find stack begin marker"
 
 and op_list_begin_rev _ =
   match Stack.pop Rt.xstk with
   | Some x ->
      let n = Rt.len () - x in
-     let xs = Array.init n ~f:(fun ix -> Rt.get (n - ix - 1)) in
+     let xs = Array.init n (fun ix -> Rt.get (n - ix - 1)) in
      Res.Array.remove_n Rt.stk n;
      Rt.push @ L xs;
   | None -> failwith "Cannot find stack begin marker"
@@ -188,7 +188,7 @@ and op_scan ctxs =              (* \ *)
   | F _ as f, L xs ->
      let ys =
        Array.init (Array.length xs)
-         ~f:(fun ix ->
+         (fun ix ->
            if ix = 0 then (
              Rt.push xs.(ix);
              xs.(ix)
@@ -443,11 +443,11 @@ and op_find ctxs =              (* ? *)
     match x, y with
     | L xs, L ys ->
        L (Array.init (Array.length xs)
-            ~f:(fun ix -> find_ix xs.(ix) ys))
+            (fun ix -> find_ix xs.(ix) ys))
     | x, L xs -> find_ix x xs
     | S x, S y ->
        L (Array.init (String.length x)
-            ~f:(fun ix ->
+            (fun ix ->
               match String.lfindi ~pos:0 y
                       ~f:(fun _ yc -> Char.equal (String.get x ix) yc) with
               | Some x -> Z x
@@ -484,7 +484,7 @@ and op_where _ =                (* where *)
          ~f:(fun x y ->
            match x, y with
            | x, Z y -> x + y
-           | x, B b -> x + Bool.to_int b
+           | x, B y -> x + Bool.to_int y
            | _ -> type_err "where") in
      let ys = Array.create n N in
      let rec go iy ix =
@@ -493,6 +493,7 @@ and op_where _ =                (* where *)
          let x =
            match xs.(ix) with
            | Z x -> x
+           | B x -> Bool.to_int x
            | _ -> type_err "where" in
          for i = iy to iy + x - 1 do
            ys.(i) <- Z ix
@@ -512,11 +513,9 @@ and op_drop ctxs =              (* _ *)
   Rt.push @
     match x, y with
     | Z x, L ys when abs x < Array.length ys ->
-       let s, e = bounds x @ Array.length ys in
-       L (Array.slice ys s e)
+       let s, e = bounds x @ Array.length ys in L (Array.slice ys s e)
     | Z x, S y when abs x < String.length y ->
-       let s, e = bounds x @ String.length y in
-       S (String.slice y s e)
+       let s, e = bounds x @ String.length y in S (String.slice y s e)
     | Z _, L _ -> L [||]
     | Z _, S _ -> S ""
     | _ -> type_err "_"
@@ -576,7 +575,7 @@ and op_floor ctxs =             (* floor *)
 
 and op_enlist ctxs =            (* enlist *)
   match Rt.pop_eval ctxs with
-  | Z n -> Rt.push @ L (Array.init n ~f:(fun _ -> Rt.pop ()))
+  | Z n -> Rt.push @ L (Array.init n (fun _ -> Rt.pop ()))
   | _ -> type_err "enlist"
 
 and op_read _ =                 (* read *)
@@ -651,18 +650,29 @@ and op_cast _ =               (* of *)
 and op_in ctxs =                   (* in *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  match x, y with
-  | x, L ys -> Rt.push @ B (Array.exists ys ~f:(xs_eq x))
-  | _ -> type_err "in"
+  let exists x xs = Array.exists xs ~f:(xs_eq x) in
+  Rt.push @
+    match x, y with
+    | L xs, L ys ->
+       L (Array.init (Array.length xs)
+            (fun ix -> B (exists xs.(ix) ys)))
+    | S x, S y ->
+       L (Array.init (String.length x)
+            (fun ix -> B (String.contains y @ String.get x ix)))
+    | x, L ys -> B (exists x ys)
+    | _ -> type_err "in"
 
 and op_inter ctxs =             (* inter *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  match x, y with
-  | L xs, L ys ->
-     Rt.push @ L (Array.filter xs
-                    ~f:(fun x -> Array.exists ys ~f:(xs_eq x)))
-  | _ -> type_err "inter"
+  Rt.push @
+    match x, y with
+    | L xs, L ys ->
+       L (Array.filter xs
+            (fun x -> Array.exists ys ~f:(xs_eq x)))
+    | S x, S y ->
+       S (String.filter x (fun c -> String.contains y c))
+    | _ -> type_err "inter"
 
 and op_swap_apply ctxs =        (* $ *)
   match Rt.pop_get ctxs with
