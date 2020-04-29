@@ -692,6 +692,54 @@ and op_type _ =              (* type *)
     | F _ -> Q "F"
     | N -> Q "N"
 
+and op_cut ctxs =               (* cut *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  let len x len = Int.of_float @ Float.(round_up @ (of_int @ len) / of_int x) in
+  Rt.push @
+    match x, y with
+    | Z x, L ys when x > 0 ->
+       let nlen = len x (Array.length ys) in
+       L (Array.init nlen
+            (fun ix ->
+              let e = if ix = nlen - 1 then 0 else ix * x + x in
+              L (Array.slice ys (ix * x) e)))
+    | Z x, S y when x > 0 ->
+       let nlen = len x (String.length y) in
+       L (Array.init nlen
+            (fun ix ->
+              let e =  if ix = nlen - 1 then 0 else ix * x + x in
+              S (String.slice y (ix * x) e)))
+    | L ixs, L xs ->
+       let len = Array.length ixs in
+       L (Array.init len
+            (fun ix ->
+              let s, e =
+                if ix = len -1 then
+                  match ixs.(ix) with
+                  | Z x -> x, 0
+                  | _ -> type_err "cut"
+                else
+                  match ixs.(ix), ixs.(ix + 1) with
+                  | Z x, Z y -> x, y
+                  | _ -> type_err "cut" in
+              L (Array.slice xs s e)))
+    | L ixs, S x ->
+       let len = Array.length ixs in
+       L (Array.init len
+            (fun ix ->
+              let s, e =
+                if ix = len -1 then
+                  match ixs.(ix) with
+                  | Z x -> x, 0
+                  | _ -> type_err "cut"
+                else
+                  match ixs.(ix), ixs.(ix + 1) with
+                  | Z x, Z y -> x, y
+                  | _ -> type_err "cut" in
+              S (String.slice x s e)))
+    | _ -> type_err "cut"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -724,6 +772,7 @@ let builtin =
    ("$",        true,   op_swap_apply);
    ("in",       true,   op_in);
    ("inter",    true,   op_inter);
+   ("cut",      true,   op_cut);
    ("sum",      false,  op_sum);
    ("prod",     false,  op_prod);
    ("sums",     false,  op_sums);
