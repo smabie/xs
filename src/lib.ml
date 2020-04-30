@@ -293,12 +293,12 @@ and op_til _ =                  (* til *)
   | Z x -> Rt.push @ L (Array.init x (fun ix -> Z ix))
   | _ -> type_err "til"
 
-and op_eq ctxs =                (* = *)
+and op_eq ctxs =                (* == *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   Rt.push @ B (xs_eq x y)
 
-and op_trues ctxs =             (* ~ *)
+and op_trues ctxs =             (* = *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   match x, y with
