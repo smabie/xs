@@ -4,7 +4,7 @@ open Defs
 let run s =
   let ctxs = [Rt.setup Lib.builtin] in
   Rt.eval ctxs @ Parser.parse s;
-  xs_to_string @ Rt.pop ()
+  Xs.to_string @ Rt.pop ()
 
 let t x y = String.equal (run x) y
 
@@ -150,7 +150,7 @@ let%test _ = t "flip [1 2]"             "[[1] [2]]"
 let%test _ = t "flip [[1 2][3 4]]"      "[[1 3] [2 4]]"
 let%test _ = t "flip \"\""              "[]"
 let%test _ = t "flip [\"ab\" \"bc\"]"   "[\"ab\" \"bc\"]"
-let%test _ = t "abs neg 3.2"            "3.200000"
+let%test _ = t "abs neg 3.2"            "3.20000"
 let%test _ = t "abs neg 2"              "2"
 let%test _ = t "abs [neg 2 neg 1]"      "[2 1]"
 

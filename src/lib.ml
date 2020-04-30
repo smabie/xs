@@ -120,7 +120,7 @@ and op_set ctxs =               (* ~ *)
      (match Rt.pop () with
       | L qs -> Array.iteri qs (fun ix q -> Rt.bind ctxs q (Rt.get ix))
       | _ -> type_err ":")
-  | N -> print_endline @ xs_to_string (Rt.peek ())
+  | N -> print_endline @ Xs.to_string (Rt.peek ())
   | _ ->  type_err "~"
 
 and op_set2 ctxs =              (* : *)
@@ -131,7 +131,7 @@ and op_set2 ctxs =              (* : *)
      (match Rt.pop () with
       | L qs -> Array.iter qs (fun q -> Rt.bind ctxs q (Rt.pop ()))
       | _ -> type_err "::")
-  | N -> print_endline @ xs_to_string (Rt.pop ())
+  | N -> print_endline @ Xs.to_string (Rt.pop ())
   | _ ->  type_err ":"
 
 and op_apply ctxs =             (* . *)
@@ -177,12 +177,12 @@ and op_fold ctxs =              (* / *)
      let rec go prev =
        Rt.call_fn f ctxs;
        let y = Rt.peek () in
-       if xs_eq x y || xs_eq prev y then ()
+       if Xs.equal x y || Xs.equal prev y then ()
        else go y in
      Rt.push x;
      Rt.call_fn f ctxs;
      let y = Rt.peek () in
-     if xs_eq y x then ()
+     if Xs.equal y x then ()
      else go y
   | _ -> type_err "/"
 
@@ -194,12 +194,12 @@ and op_fix ctxs =               (* fix *)
      let rec go prev =
        Rt.call_fn f ctxs;
        let y = Rt.peek () in
-       if xs_eq x y || xs_eq prev y then ()
+       if Xs.equal x y || Xs.equal prev y then ()
        else go y in
      Rt.push x;
      Rt.call_fn f ctxs;
      let y = Rt.peek () in
-     if xs_eq y x then ()
+     if Xs.equal y x then ()
      else go y
   | _ -> type_err "fix"
 
@@ -214,7 +214,7 @@ and op_fixes ctxs =               (* fixes *)
          Rt.dup ();
          Rt.call_fn f ctxs;
          let y = Rt.peek () in
-         if xs_eq x y || xs_eq prev y then
+         if Xs.equal x y || Xs.equal prev y then
            let _ = Rt.pop () in  ()
          else
            go y in
@@ -222,7 +222,7 @@ and op_fixes ctxs =               (* fixes *)
        Rt.dup ();
        Rt.call_fn f ctxs;
        let y = Rt.peek () in
-       if xs_eq y x then
+       if Xs.equal y x then
          let _ = Rt.pop () in ()
        else go y
   | _ -> type_err "fix"
@@ -296,7 +296,7 @@ and op_til _ =                  (* til *)
 and op_eq ctxs =                (* == *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  Rt.push @ B (xs_eq x y)
+  Rt.push @ B (Xs.equal x y)
 
 and op_trues ctxs =             (* = *)
   let x = Rt.pop_eval ctxs in
@@ -305,7 +305,7 @@ and op_trues ctxs =             (* = *)
   | L xs, L ys -> map2 ctxs xs ys op_eq
   | x, L ys -> broadcast ~rev:false ctxs x ys op_eq
   | L xs, y -> broadcast ~rev:true ctxs y xs op_eq
-  | x, y -> Rt.push @ B (xs_eq x y)
+  | x, y -> Rt.push @ B (Xs.equal x y)
 
 and op_lt ctxs =                (* < *)
   let x = Rt.pop_eval ctxs in
@@ -314,11 +314,7 @@ and op_lt ctxs =                (* < *)
   | L xs, L ys -> map2 ctxs xs ys op_lt
   | x, L ys -> broadcast ~rev:false ctxs x ys op_lt
   | L xs, y -> broadcast ~rev:true ctxs y xs op_lt
-  | Z x, Z y -> Rt.push @ B (x < y)
-  | Z x, R y -> Rt.push @ B (Float.(<) (float_of_int x) y)
-  | R x, R y -> Rt.push @ B (Float.(<) x y)
-  | R x, Z y -> Rt.push @ B (Float.(<) x (float_of_int y))
-  | _ -> type_err "<"
+  | x, y -> Rt.push @ B (Xs.compare x y = -1)
 
 and op_gt ctxs =                (* > *)
   let x = Rt.pop_eval ctxs in
@@ -327,11 +323,7 @@ and op_gt ctxs =                (* > *)
   | L xs, L ys -> map2 ctxs xs ys op_gt
   | x, L ys -> broadcast ~rev:false ctxs x ys op_gt
   | L xs, y -> broadcast ~rev:true ctxs y xs op_gt
-  | Z x, Z y -> Rt.push @ B (x > y)
-  | Z x, R y -> Rt.push @ B (Float.(>) (float_of_int x) y)
-  | R x, R y -> Rt.push @ B (Float.(>) x y)
-  | R x, Z y -> Rt.push @ B (Float.(>) x (float_of_int y))
-  | _ -> type_err "<"
+  | x, y -> Rt.push @ B (Xs.compare x y = 1)
 
 and op_geq ctxs =               (* gq *)
   let x = Rt.pop_eval ctxs in
@@ -340,11 +332,9 @@ and op_geq ctxs =               (* gq *)
   | L xs, L ys -> map2 ctxs xs ys op_geq
   | x, L ys -> broadcast ~rev:false ctxs x ys op_geq
   | L xs, y -> broadcast ~rev:true ctxs y xs op_geq
-  | Z x, Z y -> Rt.push @ B (x >= y)
-  | Z x, R y -> Rt.push @ B (Float.(>=) (float_of_int x) y)
-  | R x, R y -> Rt.push @ B (Float.(>=) x y)
-  | R x, Z y -> Rt.push @ B (Float.(>=) x (float_of_int y))
-  | _ -> type_err "<"
+  | x, y ->
+     let c = Xs.compare x y in
+     Rt.push @ B (c = 1 || c = 0 )
 
 and op_leq ctxs =               (* lq *)
   let x = Rt.pop_eval ctxs in
@@ -353,11 +343,9 @@ and op_leq ctxs =               (* lq *)
   | L xs, L ys -> map2 ctxs xs ys op_leq
   | x, L ys -> broadcast ~rev:false ctxs x ys op_leq
   | L xs, y -> broadcast ~rev:true ctxs y xs op_leq
-  | Z x, Z y -> Rt.push @ B (x <= y)
-  | Z x, R y -> Rt.push @ B (Float.(<=) (float_of_int x) y)
-  | R x, R y -> Rt.push @ B (Float.(<=) x y)
-  | R x, Z y -> Rt.push @ B (Float.(<=) x (float_of_int y))
-  | _ -> type_err "<"
+  | x, y ->
+     let c = Xs.compare x y in
+     Rt.push @ B (c = -1 || c = 0 )
 
 and op_if ctxs =                (* if *)
   let cond = Rt.pop () in
@@ -465,7 +453,7 @@ and op_find ctxs =              (* ? *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   let find_ix x xs =
-    Z (match Array.findi xs (fun _ y -> xs_eq x y) with
+    Z (match Array.findi xs (fun _ y -> Xs.equal x y) with
        | Some (ix, _) -> ix
        | None -> Array.length xs) in
   Rt.push @
@@ -680,7 +668,7 @@ and op_cast _ =               (* of *)
 and op_in ctxs =                   (* in *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  let exists x xs = Array.exists xs ~f:(xs_eq x) in
+  let exists x xs = Array.exists xs ~f:(Xs.equal x) in
   Rt.push @
     match x, y with
     | L xs, L ys ->
@@ -698,8 +686,8 @@ and op_inter ctxs =             (* inter *)
   Rt.push @
     match x, y with
     | L xs, L ys ->
-       L (Array.filter xs
-            (fun x -> Array.exists ys ~f:(xs_eq x)))
+       let x, y = Set.of_array (module Xs) xs, Set.of_array (module Xs) ys in
+       L (Set.to_array @ Set.inter x y)
     | S x, S y ->
        S (String.filter x (fun c -> String.contains y c))
     | _ -> type_err "inter"
@@ -805,7 +793,7 @@ and op_min _ =                  (* min*)
   Rt.push @
     match Rt.pop () with
     | L xs ->
-       (match Array.min_elt xs xs_compare with
+       (match Array.min_elt xs Xs.compare with
         | Some x -> x
         | None -> N)
     | S x ->
@@ -818,7 +806,7 @@ and op_max _ =                  (* max *)
   Rt.push @
     match Rt.pop () with
     | L xs ->
-       (match Array.max_elt xs xs_compare with
+       (match Array.max_elt xs Xs.compare with
         | Some x -> x
         | None -> N)
     | S x ->
@@ -834,13 +822,13 @@ and sort_helper f =
     | L xs -> L (Array.sorted_copy xs f)
     | S x -> S (String.of_char_list @ List.sort (String.to_list x) Char.compare)
     | x -> x
-and op_asc _ = sort_helper xs_compare (* asc *)
-and op_dsc _ = sort_helper (fun x y -> -1 * xs_compare x y) (* dsc *)
+and op_asc _ = sort_helper Xs.compare (* asc *)
+and op_dsc _ = sort_helper (fun x y -> -1 * Xs.compare x y) (* dsc *)
 
 and op_cmp ctxs =               (* cmp *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  Rt.push @ Z (xs_compare x y)
+  Rt.push @ Z (Xs.compare x y)
 
 and op_sort ctxs =              (* sort *)
   let f = Rt.pop_get ctxs in
