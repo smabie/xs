@@ -50,8 +50,9 @@ let%test _ = t "a([`a`b`c])~1 2 3"     "1"
 let%test _ = t "+/[1 2 3 4]"            "10"
 let%test _ = t "(+.)/[1 2 3 4]"         "10"
 let%test _ = t "+\\[1 2 3]"             "[1 3 6]"
-let%test _ = t "(x:; x%2)\\6"          "[6 3 1 0]"
-let%test _ = t "(x:; x%2)/6"           "0"
+
+let%test _ = t "(x:; x%2) fixes 6"      "[6 3 1 0]"
+let%test _ = t "(x:; x%2) fix 6"        "0"
 
 let%test _ = t "(2+)'[1 2]"             "[3 4]"
 
@@ -85,7 +86,7 @@ let%test _ = t "([1 2])=[1 2]"          "[1b 1b]"
 let%test _ = t "1=[1 2]"                "[1b 0b]"
 
 let%test _ = t "([1 2]),[1 0]"          "[1 2 1 0]"
-let%test _ = t "5,,[1 0]"               "[5 1 0]"
+let%test _ = t "5::[1 0]"               "[5 1 0]"
 
 let%test _ = t "len [1 2 3]"            "3"
 

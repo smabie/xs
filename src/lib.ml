@@ -112,7 +112,7 @@ and op_neg _ =               (* neg *)
     | R x -> R (-1.0 *. x)
     | _ -> type_err "op_neg"
 
-and op_set ctxs =               (* : *)
+and op_set ctxs =               (* ~ *)
   match Rt.pop () with
   | Q _ as q -> Rt.bind ctxs q (Rt.peek ())
   | F _ as f ->
@@ -121,9 +121,9 @@ and op_set ctxs =               (* : *)
       | L qs -> Array.iteri qs (fun ix q -> Rt.bind ctxs q (Rt.get ix))
       | _ -> type_err ":")
   | N -> print_endline @ xs_to_string (Rt.peek ())
-  | _ ->  type_err ":"
+  | _ ->  type_err "~"
 
-and op_set2 ctxs =              (* :: *)
+and op_set2 ctxs =              (* : *)
   match Rt.pop () with
   | Q _ as q -> Rt.bind ctxs q (Rt.pop ())
   | F _ as f ->
@@ -132,7 +132,7 @@ and op_set2 ctxs =              (* :: *)
       | L qs -> Array.iter qs (fun q -> Rt.bind ctxs q (Rt.pop ()))
       | _ -> type_err "::")
   | N -> print_endline @ xs_to_string (Rt.pop ())
-  | _ ->  type_err "::"
+  | _ ->  type_err ":"
 
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
@@ -186,6 +186,47 @@ and op_fold ctxs =              (* / *)
      else go y
   | _ -> type_err "/"
 
+and op_fix ctxs =               (* fix *)
+  let f = Rt.pop_get ctxs in
+  let x = Rt.pop () in
+  match f, x with
+  | F _ as f, x ->
+     let rec go prev =
+       Rt.call_fn f ctxs;
+       let y = Rt.peek () in
+       if xs_eq x y || xs_eq prev y then ()
+       else go y in
+     Rt.push x;
+     Rt.call_fn f ctxs;
+     let y = Rt.peek () in
+     if xs_eq y x then ()
+     else go y
+  | _ -> type_err "fix"
+
+and op_fixes ctxs =               (* fixes *)
+  let f = Rt.pop_get ctxs in
+  let x = Rt.pop () in
+  match f, x with
+  | F _ as f, x ->
+     with_list_rev ctxs @
+       fun () ->
+       let rec go prev =
+         Rt.dup ();
+         Rt.call_fn f ctxs;
+         let y = Rt.peek () in
+         if xs_eq x y || xs_eq prev y then
+           let _ = Rt.pop () in  ()
+         else
+           go y in
+       Rt.push x;
+       Rt.dup ();
+       Rt.call_fn f ctxs;
+       let y = Rt.peek () in
+       if xs_eq y x then
+         let _ = Rt.pop () in ()
+       else go y
+  | _ -> type_err "fix"
+
 and op_scan ctxs =              (* \ *)
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
@@ -206,24 +247,6 @@ and op_scan ctxs =              (* \ *)
            )
          ) in
      Rt.push @ L ys
-  | F _ as f, x ->
-     with_list_rev ctxs @
-       fun () ->
-       let rec go prev =
-         Rt.dup ();
-         Rt.call_fn f ctxs;
-         let y = Rt.peek () in
-         if xs_eq x y || xs_eq prev y then
-           let _ = Rt.pop () in  ()
-         else
-           go y in
-       Rt.push x;
-       Rt.dup ();
-       Rt.call_fn f ctxs;
-       let y = Rt.peek () in
-       if xs_eq y x then
-         let _ = Rt.pop () in ()
-       else go y
   | _ -> type_err "/"
 
 and op_dup _ = Rt.dup () (* dup *)
@@ -372,7 +395,7 @@ and op_concat ctxs =            (* , *)
   | L xs, L ys -> Rt.push @ L (Array.append xs ys)
   | _ -> type_err ","
 
-and op_cons ctxs =            (* ,, *)
+and op_cons ctxs =            (* :: *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   match x, y with
@@ -799,7 +822,7 @@ let builtin =
    ("gq",       true,   op_geq);
    ("lq",       true,   op_leq);
    (",",        true,   op_concat);
-   (",,",       true,   op_cons);
+   ("::",       true,   op_cons);
    ("#",        true,   op_take);
    ("_",        true,   op_drop);
    ("sv",       true,   op_sv);
@@ -811,6 +834,8 @@ let builtin =
    ("in",       true,   op_in);
    ("inter",    true,   op_inter);
    ("cut",      true,   op_cut);
+   ("fix",      true,   op_fix);
+   ("fixes",    true,   op_fixes);
    ("flip",     false,  op_flip);
    ("sum",      false,  op_sum);
    ("prod",     false,  op_prod);
