@@ -162,3 +162,8 @@ let%test _ = t "\"a\" cmp 3"            "1"
 let%test _ = t "\"abc\" cmp \"abc\""    "0"
 let%test _ = t "\"a\" cmp \"b\""        "-1"
 let%test _ = t "([1 2 3]) cmp [0 1]"    "1"
+
+let%test _ = t "uniq [3 3]"             "[3]"
+let%test _ = t "uniq 3"                 "[3]"
+
+let%test _ = t "([1]) union [1]"        "[1]"

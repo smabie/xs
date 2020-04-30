@@ -690,7 +690,34 @@ and op_inter ctxs =             (* inter *)
        L (Set.to_array @ Set.inter x y)
     | S x, S y ->
        S (String.filter x (fun c -> String.contains y c))
-    | _ -> type_err "inter"
+    | x, y when Xs.equal x y ->  L [|x|]
+    | _, _ -> L [||]
+
+and op_uniq _ =                 (* uniq *)
+  Rt.push @
+    match Rt.pop () with
+    | L xs -> L (Set.to_array @ Set.of_array (module Xs) xs)
+    | S x ->
+       S (String.of_char_list @ Set.to_list @
+            Set.of_array (module Char) @ String.to_array x)
+    | x -> L [|x|]
+
+and op_union ctxs =             (* union *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  Rt.push @
+    match x, y with
+    | L xs, L ys ->
+       let x, y = Set.of_array (module Xs) xs, Set.of_array (module Xs) ys in
+       L (Set.to_array @ Set.union x y)
+    | S x, S y ->
+       let x, y = Set.of_array (module Char) @ String.to_array x,
+                  Set.of_array (module Char) @ String.to_array y in
+       S (String.of_char_list @ Set.to_list @ Set.union x y )
+    | L xs, y | y, L xs ->
+       L (Set.to_array @ Set.of_list (module Xs) @ y :: Array.to_list xs)
+    | x, y when Xs.equal x y -> L [|x|]
+    | x, y -> L [|x; y|]
 
 and op_swap_apply ctxs =        (* $ *)
   match Rt.pop_get ctxs with
@@ -856,6 +883,7 @@ and op_sort ctxs =              (* sort *)
                 | _ -> type_err "sort"))
   | _ -> type_err "sort"
 
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -888,11 +916,13 @@ let builtin =
    ("$",        true,   op_swap_apply);
    ("in",       true,   op_in);
    ("inter",    true,   op_inter);
+   ("union",    true,   op_union);
    ("cut",      true,   op_cut);
    ("fix",      true,   op_fix);
    ("fixes",    true,   op_fixes);
    ("cmp",      true,   op_cmp);
    ("sort",     true,   op_sort);
+   ("uniq",     false,  op_uniq);
    ("min",      false,  op_min);
    ("max",      false,  op_max);
    ("asc",      false,  op_asc);
