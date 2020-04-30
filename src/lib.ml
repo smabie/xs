@@ -286,7 +286,7 @@ and op_map2 ctxs =              (* '' *)
   | _ -> type_err "''"
 
 and op_drop_stk _ = let _ = Rt.pop () in () (* drop *)
-and op_swap _ = Rt.swap 0 1  (* swap *)
+and op_swap _ = Rt.swap 0 1                 (* swap *)
 
 and op_til _ =                  (* til *)
   match Rt.pop () with
@@ -801,6 +801,73 @@ and op_flip _ =                 (* flip *)
     | S x -> L (Array.map (String.to_array x) (fun c -> S (Char.to_string c)))
     | _ -> type_err "flip"
 
+and op_min _ =                  (* min*)
+  Rt.push @
+    match Rt.pop () with
+    | L xs ->
+       (match Array.min_elt xs xs_compare with
+        | Some x -> x
+        | None -> N)
+    | S x ->
+       (match String.min_elt x Char.compare with
+        | Some x -> S (Char.to_string x)
+        | None -> N)
+    | x -> x
+
+and op_max _ =                  (* max *)
+  Rt.push @
+    match Rt.pop () with
+    | L xs ->
+       (match Array.max_elt xs xs_compare with
+        | Some x -> x
+        | None -> N)
+    | S x ->
+       (match String.max_elt x Char.compare with
+        | Some x -> S (Char.to_string x)
+        | None -> N)
+    | x -> x
+
+
+and sort_helper f =
+  Rt.push @
+    match Rt.pop () with
+    | L xs -> L (Array.sorted_copy xs f)
+    | S x -> S (String.of_char_list @ List.sort (String.to_list x) Char.compare)
+    | x -> x
+and op_asc _ = sort_helper xs_compare (* asc *)
+and op_dsc _ = sort_helper (fun x y -> -1 * xs_compare x y) (* dsc *)
+
+and op_cmp ctxs =               (* cmp *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  Rt.push @ Z (xs_compare x y)
+
+and op_sort ctxs =              (* sort *)
+  let f = Rt.pop_get ctxs in
+  let x = Rt.pop () in
+  Rt.push @
+    match f, x with
+    | F _ as f, L xs ->
+       L (Array.sorted_copy xs
+            (fun x y ->
+              Rt.push y;
+              Rt.push x;
+              Rt.call_fn f ctxs;
+              match Rt.pop () with
+              | Z x -> x
+              | _ -> type_err "sort"))
+    | F _ as f, S x ->
+       S (String.of_char_list @
+            List.sort (String.to_list x)
+              (fun x y ->
+                Rt.push @ S (Char.to_string y);
+                Rt.push @ S (Char.to_string x);
+                Rt.call_fn f ctxs;
+                match Rt.pop () with
+                | Z x -> x
+                | _ -> type_err "sort"))
+  | _ -> type_err "sort"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -836,6 +903,12 @@ let builtin =
    ("cut",      true,   op_cut);
    ("fix",      true,   op_fix);
    ("fixes",    true,   op_fixes);
+   ("cmp",      true,   op_cmp);
+   ("sort",     true,   op_sort);
+   ("min",      false,  op_min);
+   ("max",      false,  op_max);
+   ("asc",      false,  op_asc);
+   ("dsc",      false,  op_dsc);
    ("flip",     false,  op_flip);
    ("sum",      false,  op_sum);
    ("prod",     false,  op_prod);
@@ -847,7 +920,7 @@ let builtin =
    ("cos",      false,  op_cos);
    ("tan",      false,  op_tan);
    ("floor",    false,  op_floor);
-   ("abs",      false, op_abs);
+   ("abs",      false,  op_abs);
    ("ceil",     false,  op_ceil);
    ("if",       false,  op_if);
    ("cond",     false,  op_cond);

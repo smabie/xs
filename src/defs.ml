@@ -86,3 +86,26 @@ let rec xs_eq x y =
        else false in
      go 0
   | _ -> false
+
+let rec xs_compare x y =
+  match x, y with
+  | N, N -> 0
+  | N, L _ -> 1
+  | N, _ -> -1
+  | Z x, Z y -> compare x y
+  | Z x, R y -> Float.compare (Int.to_float x) y
+  | Z x, B y -> compare x (Bool.to_int y)
+  | R x, R y -> Float.compare x y
+  | R x, Z y -> Float.compare x (Int.to_float y)
+  | R x, B y -> Float.compare x (Int.to_float @ Bool.to_int y)
+  | S x, S y | Q x, Q y -> String.compare x y
+  | B x, B y -> Bool.compare x y
+  | L [||], L [||] -> 0
+  | S _, _ -> 1
+  | Q _, _ -> 1
+  | _, S _ -> -1
+  | _, Q _ -> -1
+  | _, L [||] -> 1
+  | L [||], _ -> -1
+  | L xs, L ys -> Array.compare xs_compare xs ys
+  | _ -> 1
