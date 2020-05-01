@@ -893,7 +893,7 @@ and bool_helper ctxs f g s =
   | _ -> type_err s
 
 and op_or ctxs =  bool_helper ctxs (||) op_or "||" (* || *)
-and op_and ctxs = bool_helper ctxs (&&) op_and "&&" (* || *)
+and op_and ctxs = bool_helper ctxs (&&) op_and "&&" (* && *)
 
 let builtin =
   [("+",        true,   op_add);
