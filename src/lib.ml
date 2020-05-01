@@ -883,6 +883,17 @@ and op_sort ctxs =              (* sort *)
                 | _ -> type_err "sort"))
   | _ -> type_err "sort"
 
+and bool_helper ctxs f g s =
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | B x, B y -> Rt.push @ B (f x y)
+  | x, L ys -> broadcast ~rev:false ctxs x ys g
+  | L xs, y -> broadcast ~rev:true ctxs y xs g
+  | _ -> type_err s
+
+and op_or ctxs =  bool_helper ctxs (||) op_or "||" (* || *)
+and op_and ctxs = bool_helper ctxs (&&) op_and "&&" (* || *)
 
 let builtin =
   [("+",        true,   op_add);
@@ -899,6 +910,8 @@ let builtin =
    ("~",        true,   op_set);
    (":",        true,   op_set2);
    ("==",       true,   op_eq);
+   ("&&",       true,   op_and);
+   ("||",       true,   op_or);
    ("=",        true,   op_trues);
    ("<",        true,   op_lt);
    (">",        true,   op_gt);

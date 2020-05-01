@@ -1,5 +1,5 @@
 (* parser.re *)
-(* 
+(*
  * This file is public domain as declared by Sturm Mabie
  *)
 
@@ -12,7 +12,7 @@ open Defs
 let sopers = String.to_list "[]."
 
 (* Operators that confirm to the regex opers+ ex: ++, %%%, etc *)
-let opers = String.to_list "+=!@#$%^&*-_\\/?~<>,:'"
+let opers = String.to_list "|+=!@#$%^&*-_\\/?~<>,:'"
 
 let is_whitespace = function | ' '|'\t'|'\n'|'\r' -> true | _ -> false
 let is_digit = function | '0'..'9' -> true | _ -> false
@@ -48,7 +48,7 @@ let quote =
     fun alphas -> take_while is_digit >>|
     fun digits -> Quote (alphas ^ digits)
 
-(* 
+(*
  * single character operators. They have no special semantics so we just generate
  * the Ident type instead of them having their own type
  *)

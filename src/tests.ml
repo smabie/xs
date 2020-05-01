@@ -167,3 +167,6 @@ let%test _ = t "uniq [3 3]"             "[3]"
 let%test _ = t "uniq 3"                 "[3]"
 
 let%test _ = t "([1]) union [1]"        "[1]"
+
+let%test _ = t "1b && 0b"               "0b"
+let%test _ = t "1b || 0b"               "1b"
