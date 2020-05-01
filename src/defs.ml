@@ -61,32 +61,21 @@ and xs_to_string x =
   | B false -> "0b"
   | S x -> sprintf "\"%s\"" x
   | L xs ->
-     sprintf "[%s]" @
-       String.concat ~sep:" " @ List.map (Array.to_list xs) xs_to_string
+     Array.fold_until xs ~init:(Buffer.create (Array.length xs + 1))
+       ~finish:(fun acc -> Buffer.add_char acc 'b'; Buffer.contents acc)
+       ~f:(fun acc y ->
+         match y with
+         | B x ->
+            Buffer.add_char acc (if x then '1' else '0');
+            Continue (acc)
+         | _ ->
+            Stop (sprintf "[%s]" @
+                    String.concat ~sep:" " @
+                      List.map (Array.to_list xs) xs_to_string))
   | F { is_oper = b; instrs = Either.First xs } ->
      sprintf (if phys_equal b true then "{%s}" else "(%s)") @ concat_parse xs
   | N -> "0N"
   | _ -> ""
-
-let rec xs_eq x y =
-  match x, y with
-  | N, N -> true
-  | Z x, Z y -> x = y
-  | R x, R y -> Float.(abs (x - y) <= 10. ** (-5.))
-  | B x, B y -> Bool.equal x y
-  | S x, S y -> String.equal x y
-  | Q x, Q y -> String.equal x y
-  | (F _ as fx), (F _ as fy) ->
-     String.equal (xs_to_string fx) (xs_to_string fy)
-  | L xs, L ys when Array.length xs = Array.length ys ->
-     let len = Array.length xs in
-     let rec go idx =
-       if idx = len then true
-       else if xs_eq xs.(idx) ys.(idx) then go (idx + 1)
-       else false in
-     go 0
-  | _ -> false
-
 
 module Xs = struct
   let tolerance = Float.(10. ** -5.)
