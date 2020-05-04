@@ -175,3 +175,5 @@ let%test _ = t "1b || 0b"               "1b"
 
 let%test _ = t "any [1b 0b]"            "1b"
 let%test _ = t "every [1b 0b]"          "0b"
+
+let%test _ = t "^[1]"                   "1"

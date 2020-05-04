@@ -384,8 +384,7 @@ and op_concat ctxs =            (* , *)
     | L xs, L ys -> L (Array.append xs ys)
     | x, L ys -> L (Array.append [|x|] ys )
     | L xs, y -> L (Array.append xs [|y|])
-    | _ -> type_err ","
-
+    | x, y -> L [|x; y|]
 
 and op_cons ctxs =            (* :: *)
   let x = Rt.pop_eval ctxs in
@@ -913,6 +912,25 @@ and op_any ctxs =               (* any *)
 and op_every ctxs =             (* every *)
   existential_helper ctxs (fun xs f -> Array.for_all xs f) "every"
 
+and op_cat ctxs =               (* cat *)
+  Rt.push @ make_builtin(op_concat);
+  op_fold ctxs
+
+and op_cats ctxs =              (* cats *)
+  Rt.push @ make_builtin(op_concat);
+  op_scan ctxs
+
+and op_delist ctxs =            (* ^ *)
+  match Rt.pop () with
+  | L xs ->
+     let rec go ix =
+       if ix = -1 then ()
+       else (
+         Rt.push @ xs.(ix);
+         go (ix - 1)
+       ) in
+     go @ Array.length xs - 1
+  | _ -> type_err "^"
 
 let builtin =
   [("+",        true,   op_add);
@@ -954,6 +972,9 @@ let builtin =
    ("fixes",    true,   op_fixes);
    ("cmp",      true,   op_cmp);
    ("sort",     true,   op_sort);
+   ("^",        false,  op_delist);
+   ("cat",      false,  op_cat);
+   ("cats",     false,  op_cats);
    ("every",    false,  op_every);
    ("any",      false,  op_any);
    ("uniq",     false,  op_uniq);
