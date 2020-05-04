@@ -17,7 +17,7 @@ type xs_val =
   | B of bool                   (* bool *)
   | S of string                 (* string *)
   | F of fn_t                   (* function *)
-  | L of xs_val Array.t         (* list *)
+  | L of xs_val array           (* list *)
   | N                           (* null *)
 and parse_val =
   | Sep
@@ -28,16 +28,19 @@ and parse_val =
   | Bool of bool
   | Null
   | Str of string
-  | Fn of parse_val list
-  | InfixFn of parse_val list
-  | Expr of parse_val list
+  | Fn of parse_val array
+  | InfixFn of parse_val array
+  | Expr of parse_val array
 and fn_t =
   { is_oper: bool
-  ; instrs: (parse_val list, (string, xs_val) Hashtbl.t list -> unit) Either.t
+  ; instrs: fn_kind (* (parse_val array, (string, xs_val) Hashtbl.t list -> unit) Either.t *)
   }
+and fn_kind =
+  | Builtin of ((string, xs_val) Hashtbl.t list -> unit)
+  | User of parse_val array
 
 let rec concat_parse xs =
-  String.concat ~sep:" " @ List.rev_map xs parse_to_string
+  String.concat ~sep:" " @ List.rev_map ~f:parse_to_string @ Array.to_list xs
 and parse_to_string x =
   match x with
   | Int x -> sprintf "%d" x
@@ -60,6 +63,7 @@ and xs_to_string x =
   | B true -> "1b"
   | B false -> "0b"
   | S x -> sprintf "\"%s\"" x
+  | L [||] -> "[]"
   | L xs ->
      Array.fold_until xs ~init:(Buffer.create (Array.length xs + 1))
        ~finish:(fun acc -> Buffer.add_char acc 'b'; Buffer.contents acc)
@@ -72,7 +76,7 @@ and xs_to_string x =
             Stop (sprintf "[%s]" @
                     String.concat ~sep:" " @
                       List.map (Array.to_list xs) xs_to_string))
-  | F { is_oper = b; instrs = Either.First xs } ->
+  | F { is_oper = b; instrs = User xs } ->
      sprintf (if phys_equal b true then "{%s}" else "(%s)") @ concat_parse xs
   | N -> "0N"
   | _ -> ""

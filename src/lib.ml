@@ -5,7 +5,7 @@ let rec with_list ctxs f = op_list_end ctxs; f (); op_list_begin ctxs
 and with_list_rev ctxs f = op_list_end ctxs; f (); op_list_begin_rev ctxs
 
 (* it doesn't matter whether is_oper is true or false at this stage *)
-and make_builtin f = F { is_oper = false; instrs = Either.Second f }
+and make_builtin f = F { is_oper = false; instrs = Builtin f }
 
 and map2 ctxs xs ys f =
   if Array.length xs <> Array.length ys then
@@ -379,9 +379,13 @@ and op_cond ctxs =              (* cond *)
 and op_concat ctxs =            (* , *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
-  match x, y with
-  | L xs, L ys -> Rt.push @ L (Array.append xs ys)
-  | _ -> type_err ","
+  Rt.push @
+    match x, y with
+    | L xs, L ys -> L (Array.append xs ys)
+    | x, L ys -> L (Array.append [|x|] ys )
+    | L xs, y -> L (Array.append xs [|y|])
+    | _ -> type_err ","
+
 
 and op_cons ctxs =            (* :: *)
   let x = Rt.pop_eval ctxs in
@@ -895,6 +899,21 @@ and bool_helper ctxs f g s =
 and op_or ctxs =  bool_helper ctxs (||) op_or "||" (* || *)
 and op_and ctxs = bool_helper ctxs (&&) op_and "&&" (* && *)
 
+and existential_helper _ f s =
+  Rt.push @
+    match Rt.pop () with
+    | L xs -> B (f xs (function | B true -> true | _ -> false))
+    | B true as b -> b
+    | B false as b -> b
+    | _ -> type_err s
+
+and op_any ctxs =               (* any *)
+  existential_helper ctxs (fun xs f -> Array.exists xs f) "any"
+
+and op_every ctxs =             (* every *)
+  existential_helper ctxs (fun xs f -> Array.for_all xs f) "every"
+
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -935,6 +954,8 @@ let builtin =
    ("fixes",    true,   op_fixes);
    ("cmp",      true,   op_cmp);
    ("sort",     true,   op_sort);
+   ("every",    false,  op_every);
+   ("any",      false,  op_any);
    ("uniq",     false,  op_uniq);
    ("min",      false,  op_min);
    ("max",      false,  op_max);

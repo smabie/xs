@@ -82,7 +82,7 @@ let expr =
       let infix_fn = char '{' *> expr <* char '}' >>| fun x -> InfixFn x in
       let xs = [str; quote; sep; null; boolean;
                 number; oper; soper; ident; fn; infix_fn] in
-      (many @ ws *> choice xs) <* ws) >>=
+      (many @ ws *> choice xs) <* ws >>| List.to_array) >>=
     fun parsed ->
     peek_char >>= function
     | Some c -> fail @ sprintf "Parsing failed on '%c'" c
@@ -91,16 +91,16 @@ let expr =
 (* Create sub-expressions from seperators *)
 let rec mk_tree expr =
   let go xs =
-    List.group xs (fun _  x -> phys_equal x Sep)
-    |> fun xs ->
-       List.map xs
-         (fun ys -> List.rev @ List.filter ys (fun x -> not @ phys_equal x Sep))
-    |> List.concat
-    |> (fun x -> List.map x mk_tree) in
+    List.group xs (fun _  x -> phys_equal x Sep) |>
+      List.map
+        ~f:(fun ys -> List.rev @ List.filter ys (fun x -> not @ phys_equal x Sep)) |>
+      List.concat |>
+      (fun x -> List.map x mk_tree) |>
+      List.to_array in
   match expr with
-  | Expr xs -> Expr (go xs)
-  | Fn xs -> Fn (go xs)
-  | InfixFn xs -> InfixFn (go xs)
+  | Expr xs -> Expr (go @ Array.to_list xs)
+  | Fn xs -> Fn (go @ Array.to_list xs)
+  | InfixFn xs -> InfixFn (go @ Array.to_list xs)
   | x -> x
 
 (* top-level parse *)

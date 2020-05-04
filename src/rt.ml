@@ -1,14 +1,14 @@
 open Core
-open Res
-
 open Defs
 
+
+module RArray = Res.Array
 (*
  * Unfortunately, OCaml makes is unnecessarily difficult to create modules that
  * are mutually recursive. As such, for simplicity, we just throw all the
  * functions we need into this Rt module.
  *)
-let stk = (Array.empty () : xs_val Array.t)
+let stk = (RArray.empty () : xs_val RArray.t)
 
 (* list index stack. used to quickly construct lists *)
 let xstk: int Stack.t = Stack.create ()
@@ -22,12 +22,12 @@ let rec is_oper ts k =
       | None -> is_oper ts k)
   | [] -> false
 
-let convert idx = Array.length stk - idx - 1
-let get idx = stk.(convert idx)
-let swap x y = Array.swap stk (convert x) (convert y)
-let len () = Array.length stk
-let push v = Array.add_one stk v
-let pop () = let v = get 0 in Array.remove_one stk; v
+let convert idx = RArray.length stk - idx - 1
+let get idx = RArray.get stk @ convert idx
+let swap x y = RArray.swap stk (convert x) (convert y)
+let len () = RArray.length stk
+let push v = RArray.add_one stk v
+let pop () = let v = get 0 in RArray.remove_one stk; v
 let peek () = get 0
 let dup () = push @ peek ()
 
@@ -49,8 +49,8 @@ let peek_get ctxs =
   | Q x -> lookup ctxs x
   | x -> x
 
-let create_builtin_fn ~is_oper  f = F { is_oper; instrs = Either.Second f }
-let create_fn ~is_oper xs = F { is_oper; instrs = Either.First xs }
+let create_builtin_fn ~is_oper  f = F { is_oper; instrs = Builtin f }
+let create_fn ~is_oper xs = F { is_oper; instrs = User xs }
 
 let create_ctx () = Hashtbl.create (module String)
 let bind_ctx t (k : string) (v : xs_val) = Hashtbl.set t k v
@@ -66,39 +66,44 @@ let setup xs =
   ctx
 
 let rec eval ctxs x =
-  let swap_opers ctxs xs =
-    let rec go idx =
-      if idx >= Array.length xs then xs
-      else
-        match xs.(idx) with
-        | Ident x when is_oper ctxs x ->
-           Array.swap xs idx (idx + 1);
-           (match xs.(idx) with
-            | Ident x -> xs.(idx) <- Quote x
-            | _ -> ());
-           go (idx + 2)
-        | _ -> go (idx + 1) in
-    go 0 in
   match x with
+  | Ident x ->
+     (match lookup ctxs x with
+      | F _ as f -> call_fn f ctxs
+      | x -> push x)
+  | Expr xs ->
+     let len = Array.length xs in
+     let rec go idx =
+       if idx >= len then ()
+       else (
+         match xs.(idx) with
+         | Ident x as i when is_oper ctxs x ->
+            (match xs.(idx + 1) with
+             | Ident y  ->
+                eval ctxs @ Quote y;
+                eval ctxs i;
+             | y ->
+                eval ctxs y;
+                eval ctxs i);
+            go (idx + 2)
+         | x -> eval ctxs x;
+                go (idx + 1)
+       ) in
+     go 0
+  | Fn xs -> push @ F { is_oper = false; instrs = User xs }
+  | InfixFn xs -> push @ F { is_oper = true; instrs = User xs }
   | Int x -> push (Z x)
   | Float x -> push (R x)
   | Bool x -> push (B x)
   | Null -> push N
   | Str x -> push (S x)
   | Quote x -> push (Q x)
-  | Expr xs -> Array.of_list xs |> swap_opers ctxs |> Array.iter (eval ctxs)
-  | Ident x ->
-     (match lookup ctxs x with
-      | F _ as f -> call_fn f ctxs
-      | x -> push x)
-  | Fn xs -> push @ F { is_oper = false; instrs = Either.First xs }
-  | InfixFn xs -> push @ F { is_oper = true; instrs = Either.First xs }
   | _ -> ()
 
 and  call_fn f ctxs =
   match f with
-  | F { is_oper = _; instrs = Either.Second f } -> f ctxs
-  | F { is_oper = _; instrs = Either.First xs } -> eval (create_ctx () :: ctxs) (Expr xs)
+  | F { is_oper = _; instrs = Builtin f } -> f ctxs
+  | F { is_oper = _; instrs = User xs } -> eval (create_ctx () :: ctxs) (Expr xs)
   | _ -> failwith "xs_val is not a function"
 
 let pop_eval ctxs =
@@ -107,6 +112,6 @@ let pop_eval ctxs =
   | x -> x
 
 let display () =
-  Array.iteri
+  RArray.iteri
     (fun idx x -> printf "%d: %s\n" (len () - idx - 1) @ xs_to_string x)
     stk
