@@ -114,7 +114,8 @@ module Xs = struct
       | L xs, L ys -> Array.compare compare xs ys
       | (F _ as fx), (F _ as fy) ->
          String.compare (xs_to_string fx) (xs_to_string fy)
-      | _ -> 0
+      | x, L ys -> -1
+      | _ -> 1
     let equal x y = compare x y = 0
     let sexp_of_t t = Sexp.of_string @ xs_to_string t
     let to_string = xs_to_string

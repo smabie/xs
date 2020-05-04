@@ -666,7 +666,7 @@ and op_cast _ =               (* of *)
     | Q ("L" | "l"), S x ->
        L (Array.map (String.to_array x)
             ~f:(fun x -> S (Char.to_string x)))
-    | _ -> type_err "$"
+    | _ -> type_err "of"
 
 and op_in ctxs =                   (* in *)
   let x = Rt.pop_eval ctxs in
