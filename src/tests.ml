@@ -88,7 +88,7 @@ let%test _ = t "1=[1 2]"                "10b"
 let%test _ = t "([1 2]),[1 0]"          "[1 2 1 0]"
 let%test _ = t "5,[1 2]"                "[5 1 2]"
 let%test _ = t "([1 2]),5"              "[1 2 5]"
-let%test _ = t "5::[1 0]"               "[5 1 0]"
+let%test _ = t "([5]),,[1 0]"           "[[5] 1 0]"
 
 let%test _ = t "len [1 2 3]"            "3"
 
@@ -177,3 +177,5 @@ let%test _ = t "any [1b 0b]"            "1b"
 let%test _ = t "every [1b 0b]"          "0b"
 
 let%test _ = t "^[1]"                   "1"
+
+let%test _ = t "2 do (1); 2 enlist"     "[1 1]"

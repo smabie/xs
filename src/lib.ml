@@ -134,6 +134,20 @@ and op_set2 ctxs =              (* : *)
   | N -> print_endline @ Xs.to_string (Rt.pop ())
   | _ ->  type_err ":"
 
+and op_reassign ctxs =          (* :: *)
+  let set s x =
+    match Rt.find_ctx ctxs s with
+    | Some ctx -> Hashtbl.set ctx s x
+    | None -> failwith "::, no variable found to reassign" in
+  match Rt.pop () with
+  | Q x -> set x @ Rt.pop ()
+  | F _ as f ->
+     Rt.call_fn f ctxs;
+     (match Rt.pop () with
+      | L qs -> Array.iter qs (function | Q x -> set x @ Rt.pop () | _ -> type_err "::")
+      | _ -> type_err "::")
+  | _ -> type_err "::"
+
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
   | F _ as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
@@ -386,7 +400,7 @@ and op_concat ctxs =            (* , *)
     | L xs, y -> L (Array.append xs [|y|])
     | x, y -> L [|x; y|]
 
-and op_cons ctxs =            (* :: *)
+and op_cons ctxs =            (* ,, *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   match x, y with
@@ -599,7 +613,7 @@ and op_enlist ctxs =            (* enlist *)
   | Z n -> Rt.push @ L (Array.init n (fun _ -> Rt.pop ()))
   | _ -> type_err "enlist"
 
-and op_read _ =                 (* read *)
+and op_readl _ =                (* readl *)
   match Rt.pop () with
   | S x ->
      In_channel.read_lines ~fix_win_eol:true x |>
@@ -607,7 +621,7 @@ and op_read _ =                 (* read *)
        fun x -> Rt.push @ L x
   | _ -> type_err "read"
 
-and op_write _ =                (* write *)
+and op_writel _ =               (* writel *)
   let x = Rt.pop () in
   let y = Rt.pop () in
   match x, y with
@@ -920,7 +934,7 @@ and op_cats ctxs =              (* cats *)
   Rt.push @ make_builtin(op_concat);
   op_scan ctxs
 
-and op_delist ctxs =            (* ^ *)
+and op_delist _ =               (* ^ *)
   match Rt.pop () with
   | L xs ->
      let rec go ix =
@@ -931,6 +945,30 @@ and op_delist ctxs =            (* ^ *)
        ) in
      go @ Array.length xs - 1
   | _ -> type_err "^"
+
+and op_do ctxs =                (* do *)
+  let f = Rt.pop_get ctxs in
+  let x = Rt.pop () in
+  match f, x with
+  | Z x, (F _ as f) ->
+     let rec go n =
+       if n = x then ()
+       else (
+         Rt.call_fn f ctxs;
+         go (n + 1)
+       ) in
+     go 0
+  | (F _ as fx), (F _ as fy) ->
+     let rec go () =
+       Rt.call_fn fx ctxs;
+       (match Rt.pop () with
+        | B true ->
+           Rt.call_fn fy ctxs;
+           go ()
+        | B false -> ()
+        | _ -> failwith "dobutt") in
+     go ()
+  | _ -> type_err "do"
 
 let builtin =
   [("+",        true,   op_add);
@@ -946,6 +984,7 @@ let builtin =
    ("''",       true,   op_map2);
    ("~",        true,   op_set);
    (":",        true,   op_set2);
+   ("::",       true,   op_reassign);
    ("==",       true,   op_eq);
    ("&&",       true,   op_and);
    ("||",       true,   op_or);
@@ -955,7 +994,7 @@ let builtin =
    ("gq",       true,   op_geq);
    ("lq",       true,   op_leq);
    (",",        true,   op_concat);
-   ("::",       true,   op_cons);
+   (",,",       true,   op_cons);
    ("#",        true,   op_take);
    ("_",        true,   op_drop);
    ("sv",       true,   op_sv);
@@ -971,6 +1010,7 @@ let builtin =
    ("fix",      true,   op_fix);
    ("fixes",    true,   op_fixes);
    ("cmp",      true,   op_cmp);
+   ("do",       true,   op_do);
    ("sort",     true,   op_sort);
    ("^",        false,  op_delist);
    ("cat",      false,  op_cat);
@@ -1006,7 +1046,7 @@ let builtin =
    ("swap",     false,  op_swap);
    ("til",      false,  op_til);
    ("len",      false,  op_len);
-   ("read",     false,  op_read);
-   ("write",    false,  op_write);
+   ("readl",    false,  op_readl);
+   ("writel",   false,  op_writel);
    ("type",     false,  op_type);
    ("measure",  false,  op_measure)]

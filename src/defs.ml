@@ -33,7 +33,7 @@ and parse_val =
   | Expr of parse_val array
 and fn_t =
   { is_oper: bool
-  ; instrs: fn_kind (* (parse_val array, (string, xs_val) Hashtbl.t list -> unit) Either.t *)
+  ; instrs: fn_kind
   }
 and fn_kind =
   | Builtin of ((string, xs_val) Hashtbl.t list -> unit)
@@ -114,7 +114,7 @@ module Xs = struct
       | L xs, L ys -> Array.compare compare xs ys
       | (F _ as fx), (F _ as fy) ->
          String.compare (xs_to_string fx) (xs_to_string fy)
-      | x, L ys -> -1
+      | _, L _ -> -1
       | _ -> 1
     let equal x y = compare x y = 0
     let sexp_of_t t = Sexp.of_string @ xs_to_string t

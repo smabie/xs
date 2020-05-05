@@ -59,6 +59,13 @@ let bind ts q v =
   | ctx :: _, Q k, v -> bind_ctx ctx k v
   | _ -> failwith "invalid types for bind"
 
+let rec find_ctx ts (q : string) =
+  match ts with
+  | x :: xs ->
+     if Option.is_some @ Hashtbl.find x q then Some x
+     else find_ctx xs q
+  | _ -> None
+
 let setup xs =
   let ctx = create_ctx () in
   List.iter xs
