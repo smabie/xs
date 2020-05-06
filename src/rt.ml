@@ -13,6 +13,12 @@ let stk = (RArray.empty () : xs_val RArray.t)
 (* list index stack. used to quickly construct lists *)
 let xstk: int Stack.t = Stack.create ()
 
+(*
+ * Every time we create a new handle, we bump this counter. 0, 1,2 are reserved
+ * for stdin, stdout, and stderr, respectively.
+ *)
+let fdnum = ref 3
+
 let rec is_oper ts k =
   match ts with
   | t::ts ->

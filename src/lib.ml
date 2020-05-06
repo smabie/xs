@@ -1,6 +1,9 @@
 open Core
 open Defs
 
+
+module RArray = Res.Array
+
 let rec with_list ctxs f = op_list_end ctxs; f (); op_list_begin ctxs
 and with_list_rev ctxs f = op_list_end ctxs; f (); op_list_begin_rev ctxs
 
@@ -753,6 +756,7 @@ and op_type _ =              (* type *)
     | L _ -> Q "L"
     | Q _ -> Q "Q"
     | F _ -> Q "F"
+    | H _ -> Q "H"
     | N -> Q "N"
 
 and op_cut ctxs =               (* cut *)
@@ -970,6 +974,59 @@ and op_do ctxs =                (* do *)
      go ()
   | _ -> type_err "do"
 
+and op_open ctxs =              (* open *)
+  let x = Rt.pop () in
+  let f = Rt.pop () in
+  Rt.push @
+    match x, f with
+    | Q "r", S f ->
+       let h = H (!Rt.fdnum, In (In_channel.create f)) in
+       Rt.fdnum := !Rt.fdnum + 1;
+       h
+    | Q "w", S f ->
+       let h =  H (!Rt.fdnum, Out (Out_channel.create f)) in
+       Rt.fdnum := !Rt.fdnum + 1;
+       h
+    | Q "a", S f ->
+       let h =  H (!Rt.fdnum, Out (Out_channel.create f ~append:true)) in
+       Rt.fdnum := !Rt.fdnum + 1;
+       h
+    | _ -> type_err "open"
+
+and op_read ctxs =              (* read *)
+  let x = Rt.pop_eval ctxs in
+  let h = Rt.pop () in
+  match x, h with
+  | Z x, H (_, In ch) ->
+     let buf = Buffer.create x in
+     let _ = In_channel.input_buffer ch buf x in
+     Rt.push @ S (Buffer.contents buf)
+  | _ -> type_err "read"
+
+and op_write ctxs =             (* write *)
+  let x = Rt.pop_eval ctxs in
+  let h = Rt.pop () in
+  match x, h with
+  | S x, H (_, Out ch) ->
+     let buf = Buffer.create @ String.length x in
+     Buffer.add_string buf x;
+     Out_channel.output_buffer ch buf;
+  | _ -> type_err "write"
+
+and op_seek ctxs =              (* seek *)
+  let x = Rt.pop_eval ctxs in
+  let h = Rt.pop () in
+  match x, h with
+  | Z x, H (_, Out ch) -> Out_channel.seek ch @ Int.to_int64 x;
+  | Z x, H (_, In ch) -> In_channel.seek ch @ Int.to_int64 x;
+  | _ -> type_err "seek"
+
+and op_close ctxs =             (* close *)
+  match Rt.pop () with
+  | H (_, Out ch) -> Out_channel.close ch
+  | H (_, In ch) -> In_channel.close ch
+  | _ -> type_err "close"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -1012,6 +1069,10 @@ let builtin =
    ("cmp",      true,   op_cmp);
    ("do",       true,   op_do);
    ("sort",     true,   op_sort);
+   ("open",     true,   op_open);
+   ("read",     true,   op_read);
+   ("write",    true,   op_write);
+   ("close",    false,  op_close);
    ("^",        false,  op_delist);
    ("cat",      false,  op_cat);
    ("cats",     false,  op_cats);

@@ -18,6 +18,7 @@ type xs_val =
   | S of string                 (* string *)
   | F of fn_t                   (* function *)
   | L of xs_val array           (* list *)
+  | H of (int * handle_kind)
   | N                           (* null *)
 and parse_val =
   | Sep
@@ -38,6 +39,9 @@ and fn_t =
 and fn_kind =
   | Builtin of ((string, xs_val) Hashtbl.t list -> unit)
   | User of parse_val array
+and handle_kind =
+  | In of In_channel.t
+  | Out of Out_channel.t
 
 let rec concat_parse xs =
   String.concat ~sep:" " @ List.rev_map ~f:parse_to_string @ Array.to_list xs
@@ -78,6 +82,7 @@ and xs_to_string x =
                       List.map (Array.to_list xs) xs_to_string))
   | F { is_oper = b; instrs = User xs } ->
      sprintf (if phys_equal b true then "{%s}" else "(%s)") @ concat_parse xs
+  | H (x, _) -> sprintf "`H%d" x
   | N -> "0N"
   | _ -> ""
 
