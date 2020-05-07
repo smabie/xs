@@ -108,7 +108,17 @@ and op_div ctxs =               (* % *)
   | L ys, x -> broadcast ~rev:true ctxs x ys op_div
   | _ -> type_err "%"
 
-and op_neg _ =               (* neg *)
+and op_mod ctxs =               (* mod *)
+  let x = Rt.pop_eval ctxs in
+  let y = Rt.pop () in
+  match x, y with
+  | Z x, Z y -> Rt.push @ Z (x mod y)
+  | L xs, L ys -> map2 ctxs xs ys op_div
+  | x, L ys -> broadcast ~rev:false ctxs x ys op_mod
+  | L ys, x -> broadcast ~rev:true ctxs x ys op_mod
+  | _ -> type_err "mod"
+
+and op_neg _ =                  (* neg *)
   Rt.push @
     match Rt.pop () with
     | Z x -> Z (-1 * x)
@@ -974,7 +984,7 @@ and op_do ctxs =                (* do *)
      go ()
   | _ -> type_err "do"
 
-and op_open ctxs =              (* open *)
+and op_open _ =                 (* open *)
   let x = Rt.pop () in
   let f = Rt.pop () in
   Rt.push @
@@ -1021,7 +1031,7 @@ and op_seek ctxs =              (* seek *)
   | Z x, H (_, In ch) -> In_channel.seek ch @ Int.to_int64 x;
   | _ -> type_err "seek"
 
-and op_close ctxs =             (* close *)
+and op_close _ =                (* close *)
   match Rt.pop () with
   | H (_, Out ch) -> Out_channel.close ch
   | H (_, In ch) -> In_channel.close ch
@@ -1032,6 +1042,7 @@ let builtin =
    ("-",        true,   op_sub);
    ("*",        true,   op_mul);
    ("%",        true,   op_div);
+   ("mod",      true,   op_mod);
    ("**",       true,   op_pow);
    (".",        true,   op_apply);
    ("/",        true,   op_fold);

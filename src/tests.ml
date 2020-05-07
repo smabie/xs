@@ -179,3 +179,5 @@ let%test _ = t "every [1b 0b]"          "0b"
 let%test _ = t "^[1]"                   "1"
 
 let%test _ = t "2 do (1); 2 enlist"     "[1 1]"
+
+let%test _ = t "4 mod 3"                "1"
