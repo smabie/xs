@@ -92,7 +92,7 @@ let rec eval ctxs x =
          match xs.(idx) with
          | Ident x as i when is_oper ctxs x ->
             (match xs.(idx + 1) with
-             | Ident y  ->
+             | Ident y   ->
                 eval ctxs @ Quote y;
                 eval ctxs i;
              | y ->

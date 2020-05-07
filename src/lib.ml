@@ -164,7 +164,7 @@ and op_reassign ctxs =          (* :: *)
 and op_apply ctxs =             (* . *)
   match Rt.pop_get ctxs with
   | F _ as f -> Rt.call_fn f (Rt.create_ctx () :: ctxs)
-  | _ -> type_err "."
+  | x -> Rt.push x
 
 and op_list_end _ = Stack.push Rt.xstk @ Rt.len ()
 
