@@ -989,15 +989,15 @@ and op_open _ =                 (* open *)
   let f = Rt.pop () in
   Rt.push @
     match x, f with
-    | Q "r", S f ->
+    | Q ("r" | "R"), S f ->
        let h = H (!Rt.fdnum, In (In_channel.create f)) in
        Rt.fdnum := !Rt.fdnum + 1;
        h
-    | Q "w", S f ->
+    | Q ("w" | "W"), S f ->
        let h =  H (!Rt.fdnum, Out (Out_channel.create f)) in
        Rt.fdnum := !Rt.fdnum + 1;
        h
-    | Q "a", S f ->
+    | Q ("a" | "A"), S f ->
        let h =  H (!Rt.fdnum, Out (Out_channel.create f ~append:true)) in
        Rt.fdnum := !Rt.fdnum + 1;
        h
