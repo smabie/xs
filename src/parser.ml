@@ -48,6 +48,8 @@ let quote =
     fun alphas -> take_while is_digit >>|
     fun digits -> Quote (alphas ^ digits)
 
+let comment = char '!' *> many(not_char '\n') >>| fun _ -> Sep
+
 (*
  * single character operators. They have no special semantics so we just generate
  * the Ident type instead of them having their own type
@@ -80,7 +82,7 @@ let expr =
   fix (fun expr ->
       let fn = char '(' *> expr <* char ')' >>| fun x -> Fn x in
       let infix_fn = char '{' *> expr <* char '}' >>| fun x -> InfixFn x in
-      let xs = [str; quote; sep; null; boolean;
+      let xs = [comment; str; quote; sep; null; boolean;
                 number; oper; soper; ident; fn; infix_fn] in
       (many @ ws *> choice xs) <* ws >>| List.to_array) >>=
     fun parsed ->
