@@ -8,12 +8,20 @@ Welcome to xs's documentation!
 
 *xs* is a dynamically typed, dynamically scoped, concatenative array
 language inspired by kdb+/q and released into the public domain. The
-interpreter and builtin functions are written in OCaml. Check out the
-`project page`_ on github if you wish to browse the source, open an
-issue or pull request.
+interpreter and builtin functions are written in OCaml.
+
+The name "xs" either stands for:
+
+1) eXtra Small
+2) The plural of "x"
+
+Check out the `project page`_ on github if you wish to browse the
+source, open an issue or pull request. *xs* aims to be a small
+language with a focus on compactness and expressiveness. Or email me
+at `sturm@cryptm.org`_
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    installation.rst
    examples.rst
@@ -29,3 +37,5 @@ issue or pull request.
    * :ref:`search`
 
 .. _project page: https://github.com/smabie/xs
+
+.. _sturm@cryptm.org: mailto://sturm@cryptm.org

@@ -5,12 +5,12 @@ Introduction
 ############
 
 Welcome to *xs*, an functional concatenative array language inspired
-by kdb+/q, forth, and others. The xs interpreter is written in OCaml
+by kdb+/q, forth, and others. The *xs* interpreter is written in OCaml
 and released into the public domain by yours truly. *xs* might
 initially strike you as unusual, strange, and perhaps even deliberatly
 unfriendly (especially if you don't have any prior experience with
-array languages); but I guarantee that in no time writing *xs* will
-become second nature.
+array languages); but I guarantee that in no time at all reading and
+writing *xs* will become second nature!
 
 If you haven't already, check out the installation instructions in
 order to get a working environment. After the installation completes,
@@ -18,7 +18,8 @@ start the interpreter by simply running::
 
   $ xs
 
-You should see a prompt like below in which you can enter commands::
+You should see a prompt similar to the below in which you can enter
+commands::
 
   Public domain interpreter for the xs language. Created by Sturm Mabie
   (sturm@cryptm.org). For more information check out the project's github at
@@ -31,12 +32,14 @@ Try adding to numbers::
   0: 5
 
 *xs* is a concatenative (or stack based) language in which all
-operations are parsed from right-to-left. You might be wondering at
-this point how the ``+`` operator works since it's being used in an
-infix fashion. The answer is that *xs* allows you to define special
-operators that switch the operator with the position of it's left
-adjacent value. So internally, the interpreter is evaluating ``+ 2
-5``. Now clear the top most element: ::
+operations are parsed from right-to-left.
+
+You might be wondering at this point how the ``+`` operator works
+since it's being used in an infix fashion. The answer is that *xs*
+allows you to define special operators that switch the operator with
+the position of it's left adjacent value. So internally, the
+interpreter is evaluating ``+ 2 5``. Now clear the top most element:
+::
 
   xs> drop
   xs>
@@ -57,13 +60,13 @@ In order to turn an operator into a normal function, we can use the
   0:5
 
 You might be wondering how this works, since the interpreter will
-switch the plus with the dot and then evaluate the dot. For example if
-we just try: ::
+switch the ``+`` with the ``.`` and then evaluate the ``.``. For
+example if we just try: ::
 
   xs> + 3 2
   (Invalid_argument "index out of bounds")
 
-We get an error. The interpreter is trying to switch the addition
+We get an error. The interpreter is trying to switch the ``+``
 operator with the value to its left, but there is no value to its
 left, so we receive an error. One might think that the same thing
 would happen with the ``.`` operator. In order to solve this problem,
@@ -116,7 +119,7 @@ Comments
 Comments are denoted by the ``!`` symbol and span until the end of the
 line: ::
 
-  xs> 3+2 !     this is a comment
+  xs> 3+2       ! this is a comment
   0: 5
 
 Function and Variables
@@ -132,8 +135,8 @@ We can now call it with ``5`` as the parameter: ::
   xs> mul2 5
   0: 10
 
-Parenthesis are used to define a function an the ``:`` operator is
-used to set assign a value (including a function) to an identifier: ::
+Parenthesis are used to define a function and the ``:`` operator is
+used to assign a value (including a function) to an identifier: ::
 
   xs> x:3
   xs> mul2 x
@@ -181,7 +184,7 @@ the ``:`` operator pops the value off of the stack, but we can use the
   xs> sq 5
   0: 25
 
-This operator is often useful for intermediate of temporary variables
+This operator is often useful for intermediate or temporary variables
 that are used multiple times in an expression.
 
 Operators
@@ -191,23 +194,35 @@ In *xs*, operators are not special and can be defined by the user. In
 order to define an operator, we simply use curly brackets instead of
 parenthesis to enclose our function definition: ::
 
-  xs> add:{y:x:..; x+y}
+  xs> add:{y:x; x+y}
   xs> 3 add 4
   0: 7
 
-Because we're defining an operator, the top-most value of the stack
-must be evaluated with ``..`` before being assigned to ``x``. If we
-did not, the function will still work since the addition operator
-would look up the value anyways (``x`` is also the first argument to
-``+``).
+While this will work for literals, a problem arises when trying to
+call ``add`` on a variable: ::
 
-how in our first statement we bound the variable ``x`` to the
-first-most value (after being evaluated) on the stack, and then the
-variable ``y`` to the second-most value. This turns out to be a common
-operation in *xs*, as the first line of many functions first set up
-their variables (often times, using implicit names can be clearer than
-a point free style).  ``:`` and ``~`` therefore supports binding
-multiple values at once: ::
+  xs> x:3; x add 4
+  (Failure "+ applied on invalid types")
+
+Behind the scenes, ``x`` is being passed in as the quoted literal
+```x``, which is invalid. In order to solve this problem, we first
+need to dereference ``x`` before passing the value to the ``+``
+operator: ::
+
+  xs> add:{y:x:..; x+y}
+  xs> x:3; x add 4
+  0: 7
+
+The ``..`` isn't a unique operator, we're simply using the regular
+``.`` operator on itself in order to use the prefix form of it.
+
+Notice how in our first statement we bound the variable ``x`` to the
+first-most value (after being dereferenced by ``.``) on the stack, and
+then the variable ``y`` to the second-most value. This turns out to be
+a common operation in *xs*, as the first line of many functions first
+set up their variables (often times, using explicit variables can be
+clearer than a point free style).  ``:`` and ``~`` therefore supports
+binding multiple values at once: ::
 
   xs> ([`x`y`z]):1 2 3
   xs> x*y-z
@@ -239,10 +254,9 @@ the value pushed upon the list construction stack and creates a list
 with a length equal to the difference between the two, using the
 elements from the top of the stack to populate it.
 
-
 Below are some operations we can do on lists: ::
 
-  xs> ([1 2 3]),[4 5]           ! concatenative lists
+  xs> ([1 2 3]),[4 5]           ! concatenate two lists
   0: [1 2 3 4 5]
 
   xs> ([0 3])@til 10            ! select the 0th and 3rd elements
@@ -264,6 +278,9 @@ Below are some operations we can do on lists: ::
   2: 3
   1: 2
   0: 0
+
+  xs> 4#0                       ! create a list of length 4 containing all 0s
+  0: [0 0 0 0]
 
   xs> dsc til 5                 ! sort descending
   0: [4 3 2 1 0]
@@ -295,10 +312,11 @@ This is because a list is only created after the ``[`` function is
 executed, the ``+`` operator would not see the list as its first
 argument, it would only see the ``3``. To solve this problem, A
 function is passed instead, which is evaluated by ``+`` and result
-added to ``1``. For this reason, all operators in *xs* take a function
-as their first argument.
+added to ``1``. For this reason, all operators in *xs* can take a
+function as their first argument.
 
-To generate a list from 0 to 4 (exclusive), we can use the ``til`` function: ::
+To generate a list from 0 to 4 (exclusive), we can use the ``til``
+function: ::
 
   xs> til 5
   0: [0 1 2 3 4]
@@ -337,7 +355,6 @@ of the output list.
 .. _here: https://en.wikipedia.org/wiki/Fold_(higher-order_function)
 
 
-
 Scoping
 #######
 
@@ -358,27 +375,27 @@ Data Types
 
 Below is a table of data types in *xs*:
 
-+--------+----------------------------+---------------------+
-| symbol | description                | example             |
-+========+============================+=====================+
-| \`Z    | 61-bit integer type        | 42                  |
-+--------+----------------------------+---------------------+
-| \`R    | 64-bit floating point type | 1.235               |
-+--------+----------------------------+---------------------+
-| \`B    | Boolean type               | 1b                  |
-+--------+----------------------------+---------------------+
-| \`Q    | Symbol type                | `hello              |
-+--------+----------------------------+---------------------+
-| \`S    | String type                | "world"             |
-+--------+----------------------------+---------------------+
-| \`F    | Function type              | (3*2+)              |
-+--------+----------------------------+---------------------+
-| \`L    | List type                  | [1 2 3]             |
-+--------+----------------------------+---------------------+
-| \`H    | I/O handle                 | h:open `R "foo.txt" |
-+--------+----------------------------+---------------------+
-| \`N    | Null type                  | 0n                  |
-+--------+----------------------------+---------------------+
++--------+----------------------------+----------------------+
+| symbol | description                | example              |
++========+============================+======================+
+| \`Z    | 61-bit integer type        | 42                   |
++--------+----------------------------+----------------------+
+| \`R    | 64-bit floating point type | 1.235                |
++--------+----------------------------+----------------------+
+| \`B    | Boolean type               | 1b                   |
++--------+----------------------------+----------------------+
+| \`Q    | Symbol type                | \`hello              |
++--------+----------------------------+----------------------+
+| \`S    | String type                | "world"              |
++--------+----------------------------+----------------------+
+| \`F    | Function type              | (3*2+)               |
++--------+----------------------------+----------------------+
+| \`L    | List type                  | [1 2 3]              |
++--------+----------------------------+----------------------+
+| \`H    | I/O handle                 | h:open \`R "foo.txt" |
++--------+----------------------------+----------------------+
+| \`N    | Null type                  | 0n                   |
++--------+----------------------------+----------------------+
 
 In order to convert from one data type to another, we can use the
 ``of`` operator: ::
@@ -398,9 +415,9 @@ first and then come back here.
 First we need to read in the file of masses in order to calculate the
 required fuel: ::
 
-  masses:(`Z of)'read "ex/1.txt";
+  masses:(`Z of)'readl "ex/1.txt";
 
-The ``read`` function reads the given file and returns a list of each
+The ``readl`` function reads the given file and returns a list of each
 line of the file. In order to convert the strings to integers, we
 first use the ``'`` (map) function to apply the conversion to each
 element of the list. The `of` operator converts one datatype to
