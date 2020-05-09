@@ -411,6 +411,7 @@ and op_concat ctxs =            (* , *)
     | L xs, L ys -> L (Array.append xs ys)
     | x, L ys -> L (Array.append [|x|] ys )
     | L xs, y -> L (Array.append xs [|y|])
+    | S x, S y -> S (x ^ y)
     | x, y -> L [|x; y|]
 
 and op_cons ctxs =            (* ,, *)
@@ -466,16 +467,13 @@ and op_get ctxs =               (* @ *)
     | L ixs, L ys ->
        L (Array.map ixs
             (function
-             | Z ix when ix < Array.length ys -> ys.(ix)
-             | Z _ -> N
+             | Z ix -> ys.(ix mod Array.length ys)
              | _ -> type_err "@"))
     | Z ix, S x -> S (Char.to_string @ String.get x ix)
     | L ixs, S x ->
        L (Array.map ixs
             (function
-             | Z ix when ix < String.length x ->
-                S (Char.to_string @ String.get x ix)
-             | Z _ -> N
+             | Z ix -> S (Char.to_string @ String.get x (ix mod String.length x))
              | _ -> type_err "@"))
     | _ -> type_err "@"
 
@@ -878,8 +876,11 @@ and sort_helper f =
   Rt.push @
     match Rt.pop () with
     | L xs -> L (Array.sorted_copy xs f)
-    | S x -> S (String.of_char_list @ List.sort (String.to_list x) Char.compare)
-    | x -> x
+    | S x ->
+       S (String.of_char_list @
+            List.sort (String.to_list x)
+              (fun x y -> f (S (String.of_char x)) (S (String.of_char y))))
+    | x -> L [|x|]
 and op_asc _ = sort_helper Xs.compare (* asc *)
 and op_dsc _ = sort_helper (fun x y -> -1 * Xs.compare x y) (* dsc *)
 
@@ -1006,33 +1007,43 @@ and op_open _ =                 (* open *)
 and op_read ctxs =              (* read *)
   let x = Rt.pop_eval ctxs in
   let h = Rt.pop () in
-  match x, h with
-  | Z x, H (_, In ch) ->
-     let buf = Buffer.create x in
-     let _ = In_channel.input_buffer ch buf x in
-     Rt.push @ S (Buffer.contents buf)
-  | _ -> type_err "read"
+  let read n ch =
+    let buf = Buffer.create n in
+    let _ = In_channel.input_buffer ch buf n in
+    S (Buffer.contents buf) in
+  Rt.push @
+    match x, h with
+    | Z x, Z 0 -> read x In_channel.stdin
+    | Z x, H (_, In ch) -> read x ch
+    | _ -> type_err "read"
 
 and op_write ctxs =             (* write *)
   let x = Rt.pop_eval ctxs in
   let h = Rt.pop () in
+  let write s ch =
+    let buf = Buffer.create @ String.length s in
+    Buffer.add_string buf s;
+    Out_channel.output_buffer ch buf in
   match x, h with
-  | S x, H (_, Out ch) ->
-     let buf = Buffer.create @ String.length x in
-     Buffer.add_string buf x;
-     Out_channel.output_buffer ch buf;
+  | S x, Z 1 -> write x Out_channel.stdout
+  | S x, Z 2 -> write x Out_channel.stderr
+  | S x, H (_, Out ch) -> write x ch
   | _ -> type_err "write"
 
 and op_seek ctxs =              (* seek *)
   let x = Rt.pop_eval ctxs in
   let h = Rt.pop () in
   match x, h with
+  | Z x, Z 0 -> In_channel.(seek stdin @ Int.to_int64 x)
+  | Z x, Z 1 -> Out_channel.(seek stdout @ Int.to_int64 x)
+  | Z x, Z 2 -> Out_channel.(seek stderr @ Int.to_int64 x)
   | Z x, H (_, Out ch) -> Out_channel.seek ch @ Int.to_int64 x;
   | Z x, H (_, In ch) -> In_channel.seek ch @ Int.to_int64 x;
   | _ -> type_err "seek"
 
 and op_close _ =                (* close *)
   match Rt.pop () with
+  | Z 0 | Z 1 | Z 2 -> ()
   | H (_, Out ch) -> Out_channel.close ch
   | H (_, In ch) -> In_channel.close ch
   | _ -> type_err "close"
