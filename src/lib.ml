@@ -1071,6 +1071,11 @@ and op_eval ctxs =              (* eval *)
   | S x -> Rt.eval ctxs @ Parser.parse x
   | _ -> type_err "eval"
 
+and op_include ctxs =           (* include *)
+  match Rt.pop () with
+  | S x -> Rt.eval ctxs @ Parser.parse @ In_channel.read_all x
+  | _ -> type_err "include"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -1156,4 +1161,5 @@ let builtin =
    ("len",      false,  op_len);
    ("type",     false,  op_type);
    ("measure",  false,  op_measure);
-   ("eval",     false,  op_eval)]
+   ("eval",     false,  op_eval);
+   ("include",  false,  op_include)]

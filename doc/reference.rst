@@ -1143,6 +1143,14 @@ Write the list of strings ``xs`` to the file at filepath ``f``, stdout
 Misc
 ####
 
+``include`` evaluate file
+-------------------------
+::
+
+   include f:S
+
+Evaluate the file referenced by filepath ``f`` in the current context.
+
 ``measure`` elapsed time
 ------------------------
 ::
