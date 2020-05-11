@@ -1064,6 +1064,11 @@ and op_close _ =                (* close *)
   | H (_, In ch) -> In_channel.close ch
   | _ -> type_err "close"
 
+and op_eval ctxs =              (* eval *)
+  match Rt.pop () with
+  | S x -> Rt.eval ctxs @ Parser.parse x
+  | _ -> type_err "eval"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -1148,4 +1153,5 @@ let builtin =
    ("til",      false,  op_til);
    ("len",      false,  op_len);
    ("type",     false,  op_type);
-   ("measure",  false,  op_measure)]
+   ("measure",  false,  op_measure);
+   ("eval",     false,  op_eval)]
