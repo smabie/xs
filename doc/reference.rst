@@ -1131,7 +1131,7 @@ string per line.
 ----------------------
 ::
 
-   writel f:S xs:L -> ()
+   f:S xs:L -> ()
 
 Write the list of strings ``xs`` to the file at filepath ``f``.
 

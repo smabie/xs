@@ -652,7 +652,7 @@ and op_writel ctxs =            (* writel *)
   | L xs, Z 2 -> print xs stderr
   | S x, Z 1 -> Out_channel.(output_string stdout x)
   | S x, Z 2 -> Out_channel.(output_string stderr x)
-  | S x, L ys ->
+  | L ys, S x ->
      Array.to_list ys |>
        List.map ~f:(function | S x -> x | _ -> type_err "write") |>
        Out_channel.write_lines x
