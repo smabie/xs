@@ -80,8 +80,8 @@ and xs_to_string x =
             Stop (sprintf "[%s]" @
                     String.concat ~sep:" " @
                       List.map (Array.to_list xs) xs_to_string))
-  | F { is_oper = b; instrs = User xs } ->
-     sprintf (if phys_equal b true then "{%s}" else "(%s)") @ concat_parse xs
+  | F { is_oper; instrs = User xs } ->
+     sprintf (if phys_equal is_oper true then "{%s}" else "(%s)") @ concat_parse xs
   | H (x, _) -> sprintf "`H%d" x
   | N -> "0N"
   | _ -> ""

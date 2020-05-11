@@ -1056,7 +1056,8 @@ concatenation of ``xs`` interspersed with ``x``: ::
   xs> ", " sv ["hello" "world"]
   0: "hello, world"
 
-In the future, this function will do other scalar from vector operations as well.
+*Todo*: in the future, this function will do other scalar from vector
+ operations as well.
 
 ``vs`` vector from scalar
 -------------------------
@@ -1068,6 +1069,9 @@ Break up the list ``y`` into a list, using ``x`` as a seperator: ::
 
   xs> ", " vs "hello, world"
   0: ["hello" "world"]
+
+*Todo*: in the future, this function will do other vector from scalar
+ operations as well.
 
 I/O
 ###
@@ -1131,9 +1135,10 @@ string per line.
 ----------------------
 ::
 
-   f:S xs:L -> ()
+   xs:{S | L} writel f:{1 | 2 | S} -> ()
 
-Write the list of strings ``xs`` to the file at filepath ``f``.
+Write the list of strings ``xs`` to the file at filepath ``f``, stdout
+(``1``), or stderr ``2``.
 
 Misc
 ####
@@ -1145,3 +1150,11 @@ Misc
    measure f:F -> R
 
 Measure the time taken to execute function ``f``.
+
+``eval`` evaluate
+-----------------
+::
+
+   eval x:S -> *...
+
+Evaluate the given string ``x`` in the current scope.

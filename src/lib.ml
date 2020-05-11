@@ -642,10 +642,11 @@ and op_writel ctxs =            (* writel *)
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   let print xs ch =
-    let ys = Array.to_list @ Array.map xs
-                               (function
-                                | S x -> x
-                                | _ -> type_err "writel") in
+    let ys = Array.to_list @
+               Array.map xs
+                 (function
+                  | S x -> x
+                  | _ -> type_err "writel") in
     Out_channel.output_lines ch ys in
   match x, y with
   | L xs, Z 1 -> print xs stdout
@@ -730,7 +731,8 @@ and op_inter ctxs =             (* inter *)
   Rt.push @
     match x, y with
     | L xs, L ys ->
-       let x, y = Set.of_array (module Xs) xs, Set.of_array (module Xs) ys in
+       let x, y = Set.of_array (module Xs) xs,
+                  Set.of_array (module Xs) ys in
        L (Set.to_array @ Set.inter x y)
     | S x, S y ->
        S (String.filter x (fun c -> String.contains y c))
@@ -929,7 +931,7 @@ and op_sort ctxs =              (* sort *)
                 match Rt.pop () with
                 | Z x -> x
                 | _ -> type_err "sort"))
-  | _ -> type_err "sort"
+    | _ -> type_err "sort"
 
 and bool_helper ctxs f g s =
   let x = Rt.pop_eval ctxs in

@@ -1,6 +1,5 @@
 Installation
 ============
-.. _install:
 
 Since xs is written in ocaml, it is necessary to first install
 ``opam``, the Ocaml package manager. ``opam`` is included with all
