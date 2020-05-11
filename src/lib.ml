@@ -625,22 +625,30 @@ and op_enlist ctxs =            (* enlist *)
   | _ -> type_err "enlist"
 
 and op_readl _ =                (* readl *)
-  match Rt.pop () with
-  | S x ->
-     In_channel.read_lines ~fix_win_eol:true x |>
-       Array.of_list_map ~f:(fun x -> S x) |>
-       fun x -> Rt.push @ L x
-  | _ -> type_err "read"
+  Rt.push @
+    match Rt.pop () with
+    | Z 0 ->
+       L (In_channel.(fold_lines ~fix_win_eol:true stdin
+                        ~init:[] ~f:(fun xs s -> S s :: xs)) |>
+            List.rev |>
+            List.to_array)
+    | S x ->
+       In_channel.read_lines ~fix_win_eol:true x |>
+         Array.of_list_map ~f:(fun x -> S x) |>
+         fun x -> L x
+    | _ -> type_err "readl"
 
 and op_writel _ =               (* writel *)
   let x = Rt.pop () in
   let y = Rt.pop () in
   match x, y with
+  | S x, Z 1 -> Out_channel.(output_string stdout x)
+  | S x, Z 2 -> Out_channel.(output_string stderr x)
   | S x, L ys ->
      Array.to_list ys |>
        List.map ~f:(function | S x -> x | _ -> type_err "write") |>
        Out_channel.write_lines x
-  | _ -> type_err "write"
+  | _ -> type_err "writel"
 
 and op_measure ctxs =           (* measure *)
   match Rt.pop () with
