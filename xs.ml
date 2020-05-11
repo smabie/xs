@@ -1,3 +1,8 @@
+(* xs.ml *)
+(*
+ * This file is public domain as declared by Sturm Mabie
+ *)
+
 open Core
 open Xslib.Defs
 
