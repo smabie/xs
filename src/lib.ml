@@ -638,10 +638,18 @@ and op_readl _ =                (* readl *)
          fun x -> L x
     | _ -> type_err "readl"
 
-and op_writel _ =               (* writel *)
-  let x = Rt.pop () in
+and op_writel ctxs =            (* writel *)
+  let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
+  let print xs ch =
+    let ys = Array.to_list @ Array.map xs
+                               (function
+                                | S x -> x
+                                | _ -> type_err "writel") in
+    Out_channel.output_lines ch ys in
   match x, y with
+  | L xs, Z 1 -> print xs stdout
+  | L xs, Z 2 -> print xs stderr
   | S x, Z 1 -> Out_channel.(output_string stdout x)
   | S x, Z 2 -> Out_channel.(output_string stderr x)
   | S x, L ys ->
@@ -1102,6 +1110,8 @@ let builtin =
    ("open",     true,   op_open);
    ("read",     true,   op_read);
    ("write",    true,   op_write);
+   ("writel",   true,   op_writel);
+   ("readl",    false,  op_readl);
    ("close",    false,  op_close);
    ("^",        false,  op_delist);
    ("cat",      false,  op_cat);
@@ -1137,7 +1147,5 @@ let builtin =
    ("swap",     false,  op_swap);
    ("til",      false,  op_til);
    ("len",      false,  op_len);
-   ("readl",    false,  op_readl);
-   ("writel",   false,  op_writel);
    ("type",     false,  op_type);
    ("measure",  false,  op_measure)]
