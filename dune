@@ -2,7 +2,7 @@
  (public_name xs)
  (name xs)
  (libraries core angstrom res xslib)
- (modes exe byte)
+ (modes exe)
  (preprocess (pps ppx_jane ppx_inline_test)))
 
 (env

@@ -93,7 +93,7 @@ let expr =
 (* Create sub-expressions from seperators *)
 let rec mk_tree expr =
   let go xs =
-    List.group xs (fun _  x -> phys_equal x Sep) |>
+    List.group xs (fun _ x -> phys_equal x Sep) |>
       List.map
         ~f:(fun ys -> List.rev @ List.filter ys (fun x -> not @ phys_equal x Sep)) |>
       List.concat |>

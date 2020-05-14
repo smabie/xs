@@ -4,7 +4,6 @@
  *)
 
 open Core
-open Xslib.Defs
 
 let filename_param =
   let open Command.Param in
