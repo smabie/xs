@@ -107,6 +107,6 @@ let rec mk_tree expr =
 
 (* top-level parse *)
 let parse s =
-  match parse_string expr s with
+  match parse_string Consume.All expr s with
   | Ok xs -> mk_tree xs
   | Error s -> failwith s
