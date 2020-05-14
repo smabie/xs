@@ -291,7 +291,7 @@ otherwise ``0b``.
 ------------------------
 ::
 
-   x > y -> B
+   x gq y -> B
 
 Returns ``1b`` if the first argument is greater or equal to the
 second, otherwise ``0b``.
@@ -300,7 +300,7 @@ second, otherwise ``0b``.
 ---------------------
 ::
 
-   x > y -> B
+   x lq y -> B
 
 Return ``1b`` if the first argument is less than or equal to the
 second, otherwise ``0b``.

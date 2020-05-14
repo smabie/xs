@@ -14,4 +14,8 @@ After ``opam`` is installed, run the following command::
 
 After the installation sucessfully completes, run ``eval $(opam env)``
 to update your environment variables. ``xs`` should now be installed,
-which you can check by running ``which xs``.
+which you can check by running ``which xs``. You also probably want
+``rlwrap`` for movement functions in the editor. Install it with your
+package manager and then run ``xs`` with: ::
+
+  rlwrap xs
