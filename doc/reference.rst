@@ -225,6 +225,11 @@ Find the product of all elements in a list: ::
 
    prods L -> L
 
+Returns the partial sums of the list: ::
+
+   xs> prods til 1+til 4
+   0: [1 2 6 24]
+
 ``abs`` absolute value
 -----------------------
 ::
@@ -233,8 +238,9 @@ Find the product of all elements in a list: ::
 
 Find the absolute value of a number or list: ::
 
-   xs> prods til 1+til 4
-   0: [1 2 6 24]
+   xs> abs (til 10) - 10
+   0: [10 9 8 7 6 5 4 3 2 1]
+
 
 ``ceil`` ceiling
 -----------------
