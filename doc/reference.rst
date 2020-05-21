@@ -30,7 +30,7 @@ Below is the EBNF grammar for *xs*:
    float = integer, ".", integer;
    identifier = {letter}, {digit};
    quote = "`",  identifier;
-   boolean = "0b" | "1b";
+   booleans = {"0" | "1"}, "b";
    null = "0n" | "0N";
    string = "\"", {char}, "\"";
    fn = "(", {expr}, ")";
@@ -68,6 +68,14 @@ Data Types
 +--------+----------------------------+---------------------+
 | \`N    | Null type                  | 0n                  |
 +--------+----------------------------+---------------------+
+
+Though not a distinct data-type (though it might be in the future),
+there's special syntactic sugar for boolean lists: ::
+
+  xs> type 1011b
+  0: `L
+
+```1011b`` is equivalent to ``[1b 0b 1b 1b]``.
 
 Parsing
 #######

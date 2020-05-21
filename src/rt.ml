@@ -116,6 +116,7 @@ let rec eval ctxs x =
   | Null -> push N
   | Str x -> push (S x)
   | Quote x -> push (Q x)
+  | BoolList xs -> push @ L (Array.map xs (fun x -> B x))
   | _ -> ()
 
 and  call_fn f ctxs =

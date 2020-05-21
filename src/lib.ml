@@ -701,8 +701,10 @@ and op_cast _ =               (* of *)
   let y = Rt.pop () in
   Rt.push @
     match x, y with
+    | Q ("Z" | "z"), B x -> Z (Bool.to_int x)
     | Q ("Z" | "z"), S x -> Z (int_of_string x)
     | Q ("Z" | "z"), R x -> Z (int_of_float x)
+    | Q ("R" | "r"), B x -> R (Int.to_float @ Bool.to_int x)
     | Q ("R" | "r"), S x -> R (float_of_string x)
     | Q ("R" | "r"), Z x -> R (float_of_int x)
     | Q ("Q" | "q"), S x -> Q x

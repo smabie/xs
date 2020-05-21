@@ -69,6 +69,19 @@ let boolean =
     | "1b" -> Bool true
     | _ -> assert false
 
+(* boolean arrays such as 101b or 11010b *)
+let booleans =
+  many1 (char '1' <|> char '0') <* (char 'b' <|> char 'B') >>| fun xs ->
+  match xs with
+  | ['1'] -> Bool true
+  | ['0'] -> Bool false
+  | xs ->
+     BoolList (Array.of_list_map xs
+                 (function
+                  | '1' -> true
+                  | '0' -> false
+                  | _ -> false))
+
 (* 0n -> null *)
 let null = string_ci "0n" *> return Null
 
@@ -82,7 +95,7 @@ let expr =
   fix (fun expr ->
       let fn = char '(' *> expr <* char ')' >>| fun x -> Fn x in
       let infix_fn = char '{' *> expr <* char '}' >>| fun x -> InfixFn x in
-      let xs = [comment; str; quote; sep; null; boolean;
+      let xs = [comment; str; quote; sep; null; booleans;
                 number; oper; soper; ident; fn; infix_fn] in
       (many @ ws *> choice xs) <* ws >>| List.to_array) >>=
     fun parsed ->

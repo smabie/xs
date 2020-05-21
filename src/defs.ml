@@ -27,6 +27,7 @@ and parse_val =
   | Quote of string
   | Ident of string
   | Bool of bool
+  | BoolList of bool array
   | Null
   | Str of string
   | Fn of parse_val array
@@ -58,7 +59,14 @@ and parse_to_string x =
   | Bool true -> "1b"
   | Bool false -> "0b"
   | Float x -> sprintf "%f" x
+  | BoolList xs ->
+     let buf =
+       Array.fold xs ~init:(Buffer.create (Array.length xs + 1))
+         ~f:(fun buf b -> Buffer.add_char buf (if b then '1' else '0'); buf) in
+     Buffer.add_char buf 'b' ;
+     Buffer.contents buf;
   | Sep -> ""
+
 and xs_to_string x =
   match x with
   | Z x -> sprintf "%d" x
