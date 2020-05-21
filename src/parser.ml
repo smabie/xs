@@ -60,16 +60,7 @@ let oper =
   choice @ List.map opers (fun x -> many1 (char x)) >>|
     fun cs -> Ident (String.of_char_list cs)
 
-(* 0b -> false, 1b - true *)
-let boolean =
-  string_ci "1b" <|> string_ci "0b" >>|
-    fun b ->
-    match String.lowercase b with
-    | "0b" -> Bool false
-    | "1b" -> Bool true
-    | _ -> assert false
-
-(* boolean arrays such as 101b or 11010b *)
+(* A singe boolean value or a boolean array. ex: 1b, 101b *)
 let booleans =
   many1 (char '1' <|> char '0') <* (char 'b' <|> char 'B') >>| fun xs ->
   match xs with
