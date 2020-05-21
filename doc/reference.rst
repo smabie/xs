@@ -581,8 +581,8 @@ a function, until ``x`` returns ``0b``: ::
   1: "hello"
   0: "hello"
 
-List  and String
-################
+List and String
+###############
 
 ``[]`` make list
 ----------------
@@ -720,6 +720,30 @@ places ``x`` at the head or end of ``xs``: ::
 
   xs> ([1 2]),,3
   0: [1 2 3]
+
+
+``lower`` lowercase string
+--------------------------
+::
+
+   lower S -> S
+
+Lowercase the given string: ::
+
+  xs> lower "ABC"
+  0: "abc"
+
+``upper`` uppercase string
+--------------------------
+::
+
+   upper S -> S
+
+Uppercase the given string: ::
+
+  xs> upper "abc"
+  0: "ABC"
+
 
 Indexing, Reshaping, Changing
 #############################

@@ -1084,10 +1084,20 @@ and op_include ctxs =           (* include *)
 
 and op_rand ctxs =              (* rand *)
   Rt.push @
+    match Rt.pop () with
+    | Z 0 -> R (Random.float 1.)
+    | Z n -> Z (Random.int n)
+    | _ -> type_err "rand"
+
+and op_lower _ =                (* lower *)
   match Rt.pop () with
-  | Z 0 -> R (Random.float 1.)
-  | Z n -> Z (Random.int n)
-  | _ -> type_err "rand"
+  | S x -> Rt.push @ S (String.lowercase x)
+  | _ -> type_err "lower"
+
+and op_upper _ =                (* upper *)
+  match Rt.pop () with
+  | S x -> Rt.push @ S (String.uppercase x)
+  | _ -> type_err "upper"
 
 let builtin =
   [("+",        true,   op_add);
@@ -1177,4 +1187,6 @@ let builtin =
    ("eval",     false,  op_eval);
    ("include",  false,  op_include);
    ("rand",     false,  op_rand);
+   ("lower",    false,  op_lower);
+   ("upper",    false,  op_upper)
   ]
