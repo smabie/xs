@@ -1149,6 +1149,22 @@ Write the list of strings ``xs`` to the file at filepath ``f``, stdout
 Misc
 ####
 
+``rand`` random value
+---------------------
+::
+
+   rand x:0 -> R
+   rand x:Z -> Z
+
+If ``x`` is 0, return a real number between 0 and 1
+inclusive. Otherwise, return a number between 0 and ``x`` exclusive: ::
+
+  xs> rand 0
+  0: 0.06343
+
+  xs> rand 2
+  0: 1
+
 ``include`` evaluate file
 -------------------------
 ::

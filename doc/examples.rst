@@ -7,11 +7,11 @@ Factorial: ::
 
 Fibonnaci: ::
 
-  fib:(n:(neg 1)+;0@n do(2 enlist 1@x sum x~)[0 1])
+  fib:(n:(neg 1)+;0@n do(2 enlist 1@x sum x~)[0 1]);
 
 Euclid's GCD: ::
 
-  gcd:{([`x`y]):..;if y==0(x)(y gcd x mod y)}
+  gcd:{([`x`y]):..;if y==0(x)(y gcd x mod y)};
 
 Advent of Code 2019 Day 1: ::
 

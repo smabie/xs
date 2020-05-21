@@ -1080,6 +1080,13 @@ and op_include ctxs =           (* include *)
   | S x -> Rt.eval ctxs @ Parser.parse @ In_channel.read_all x
   | _ -> type_err "include"
 
+and op_rand ctxs =              (* rand *)
+  Rt.push @
+  match Rt.pop () with
+  | Z 0 -> R (Random.float 1.)
+  | Z n -> Z (Random.int n)
+  | _ -> type_err "rand"
+
 let builtin =
   [("+",        true,   op_add);
    ("-",        true,   op_sub);
@@ -1166,4 +1173,6 @@ let builtin =
    ("type",     false,  op_type);
    ("measure",  false,  op_measure);
    ("eval",     false,  op_eval);
-   ("include",  false,  op_include)]
+   ("include",  false,  op_include);
+   ("rand",     false,  op_rand);
+  ]

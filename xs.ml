@@ -10,6 +10,7 @@ let filename_param =
   anon ("filename" %: string)
 
 let command =
+  Random.self_init ();
   Command.basic
     ~summary:"Public domain xs interpreter"
     ~readme:(fun () ->

@@ -26,7 +26,7 @@ commands::
   http://github.com/smabie/xs
   xs>
 
-Try adding to numbers::
+Try adding two numbers::
 
   xs> 2+5
   0: 5
@@ -277,7 +277,7 @@ Below are some operations we can do on lists: ::
   xs> ^[1 2 3]                  ! push the list elements onto the stack
   2: 3
   1: 2
-  0: 0
+  0: 1
 
   xs> 4#0                       ! create a list of length 4 containing all 0s
   0: [0 0 0 0]
