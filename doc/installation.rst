@@ -30,3 +30,8 @@ which you can check by running ``which xs``. You also probably want
 package manager and then run ``xs`` with: ::
 
   rlwrap xs
+
+If you ever want to update ``xs`` to the latest version, run: ::
+
+  opam update
+  opam upgrade
