@@ -29,7 +29,7 @@ commands::
 Try adding two numbers::
 
   xs> 2+5
-  0: 5
+  0: 7
 
 *xs* is a concatenative (or stack based) language in which all
 operations are parsed from right-to-left.
@@ -57,7 +57,7 @@ In order to turn an operator into a normal function, we can use the
 ``.`` operator to apply the function: ::
 
   xs> +. 3 2
-  0:5
+  0: 5
 
 You might be wondering how this works, since the interpreter will
 switch the ``+`` with the ``.`` and then evaluate the ``.``. For
