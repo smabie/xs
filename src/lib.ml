@@ -388,6 +388,7 @@ and op_if ctxs =                (* if *)
   | _ -> type_err "if"
 
 and op_cond ctxs =              (* cond *)
+  let name = "cond" in
   match Rt.pop () with
   | L xs ->
      let len = Array.length xs in
@@ -402,10 +403,10 @@ and op_cond ctxs =              (* cond *)
            match Rt.pop () with
            | B true -> Rt.call_fn xs.(ix + 1) ctxs
            | B false -> go (ix + 2)
-           | _ -> type_err "cond"
+           | _ -> type_err name
          ) in
        go 0
-  | _ -> type_err "cond"
+  | _ -> type_err name
 
 and op_concat ctxs =            (* , *)
   let x = Rt.pop_eval ctxs in
@@ -463,6 +464,7 @@ and op_take ctxs =              (* # *)
   | _ -> type_err "#"
 
 and op_get ctxs =               (* @ *)
+  let name = "@" in
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   Rt.push @
@@ -472,14 +474,14 @@ and op_get ctxs =               (* @ *)
        L (Array.map ixs
             (function
              | Z ix -> ys.(ix mod Array.length ys)
-             | _ -> type_err "@"))
+             | _ -> type_err name))
     | Z ix, S x -> S (Char.to_string @ String.get x ix)
     | L ixs, S x ->
        L (Array.map ixs
             (function
              | Z ix -> S (Char.to_string @ String.get x (ix mod String.length x))
-             | _ -> type_err "@"))
-    | _ -> type_err "@"
+             | _ -> type_err name))
+    | _ -> type_err name
 
 and op_find ctxs =              (* ? *)
   let x = Rt.pop_eval ctxs in
@@ -501,7 +503,7 @@ and op_find ctxs =              (* ? *)
                       ~f:(fun _ yc -> Char.equal (String.get x ix) yc) with
               | Some x -> Z x
               | None -> Z (String.length y)))
-  | _ -> type_err ""
+  | _ -> type_err "?"
 
 and op_sum ctxs =               (* sum *)
   Rt.push @ make_builtin op_add;
@@ -520,6 +522,7 @@ and op_prods ctxs =             (* prods *)
   op_scan ctxs;
 
 and op_where _ =                (* where *)
+  let name = "where" in
   match Rt.pop () with
   | L xs ->
      let n =
@@ -528,7 +531,7 @@ and op_where _ =                (* where *)
            match x, y with
            | x, Z y -> x + y
            | x, B y -> x + Bool.to_int y
-           | _ -> type_err "where") in
+           | _ -> type_err name) in
      let ys = Array.create n N in
      let rec go iy ix =
        if ix = Array.length xs then L ys
@@ -537,14 +540,14 @@ and op_where _ =                (* where *)
            match xs.(ix) with
            | Z x -> x
            | B x -> Bool.to_int x
-           | _ -> type_err "where" in
+           | _ -> type_err name in
          for i = iy to iy + x - 1 do
            ys.(i) <- Z ix
          done;
          go (iy + x) (ix + 1)
        ) in
      Rt.push @ go 0 0
-  | _ -> type_err "where"
+  | _ -> type_err name
 
 and op_drop ctxs =              (* _ *)
   let x = Rt.pop_eval ctxs in
@@ -632,8 +635,9 @@ and op_readl _ =                (* readl *)
   Rt.push @
     match Rt.pop () with
     | Z 0 ->
-       L (In_channel.(fold_lines ~fix_win_eol:true stdin
-                        ~init:[] ~f:(fun xs s -> S s :: xs)) |>
+       L (In_channel.(
+            fold_lines ~fix_win_eol:true stdin
+              ~init:[] ~f:(fun xs s -> S s :: xs)) |>
             List.rev |>
             List.to_array)
     | S x ->
@@ -643,6 +647,7 @@ and op_readl _ =                (* readl *)
     | _ -> type_err "readl"
 
 and op_writel ctxs =            (* writel *)
+  let name = "writel" in
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   let print xs ch =
@@ -650,7 +655,7 @@ and op_writel ctxs =            (* writel *)
                Array.map xs
                  (function
                   | S x -> x
-                  | _ -> type_err "writel") in
+                  | _ -> type_err name) in
     Out_channel.output_lines ch ys in
   match x, y with
   | L xs, Z 1 -> print xs stdout
@@ -659,9 +664,9 @@ and op_writel ctxs =            (* writel *)
   | S x, Z 2 -> Out_channel.(output_string stderr x)
   | L ys, S x ->
      Array.to_list ys |>
-       List.map ~f:(function | S x -> x | _ -> type_err "write") |>
+       List.map ~f:(function | S x -> x | _ -> type_err name) |>
        Out_channel.write_lines x
-  | _ -> type_err "writel"
+  | _ -> type_err name
 
 and op_measure ctxs =           (* measure *)
   match Rt.pop () with
@@ -672,6 +677,7 @@ and op_measure ctxs =           (* measure *)
   | _ -> type_err "measure"
 
 and op_sv ctxs =                (* sv *)
+  let name = "sv" in
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   match x, y with
@@ -682,8 +688,8 @@ and op_sv ctxs =                (* sv *)
               match b, a with
               | "", S a -> a
               | b, S a -> b ^ x ^ a
-              | _ -> type_err "sv"))
-  | _ -> type_err "sv"
+              | _ -> type_err name))
+  | _ -> type_err name
 
 and op_vs ctxs =                (* vs *)
   let x = Rt.pop_eval ctxs in
@@ -792,6 +798,7 @@ and op_type _ =              (* type *)
     | N -> Q "N"
 
 and op_cut ctxs =               (* cut *)
+  let name = "cut" in
   let x = Rt.pop_eval ctxs in
   let y = Rt.pop () in
   let len x len = Int.of_float @ Float.(round_up @ (of_int @ len) / of_int x) in
@@ -817,11 +824,11 @@ and op_cut ctxs =               (* cut *)
                 if ix = len -1 then
                   match ixs.(ix) with
                   | Z x -> x, 0
-                  | _ -> type_err "cut"
+                  | _ -> type_err name
                 else
                   match ixs.(ix), ixs.(ix + 1) with
                   | Z x, Z y -> x, y
-                  | _ -> type_err "cut" in
+                  | _ -> type_err name in
               L (Array.slice xs s e)))
     | L ixs, S x ->
        let len = Array.length ixs in
@@ -831,15 +838,16 @@ and op_cut ctxs =               (* cut *)
                 if ix = len -1 then
                   match ixs.(ix) with
                   | Z x -> x, 0
-                  | _ -> type_err "cut"
+                  | _ -> type_err name
                 else
                   match ixs.(ix), ixs.(ix + 1) with
                   | Z x, Z y -> x, y
-                  | _ -> type_err "cut" in
+                  | _ -> type_err name in
               S (String.slice x s e)))
-    | _ -> type_err "cut"
+    | _ -> type_err name
 
 and op_flip _ =                 (* flip *)
+  let name = "flip" in
   let x = Rt.pop () in
   Rt.push @
     match x with
@@ -854,7 +862,7 @@ and op_flip _ =                 (* flip *)
                     (fun iy ->
                       match xs.(iy) with
                       | L zs -> zs.(ix)
-                      | _ -> type_err "flip"))))
+                      | _ -> type_err name))))
         | S y ->
            let xlen = String.length y in
            let ylen = Array.length xs in
@@ -864,10 +872,10 @@ and op_flip _ =                 (* flip *)
                        (fun iy ->
                          match xs.(iy) with
                          | S z -> String.get z ix
-                         | _ -> type_err "flip"))))
+                         | _ -> type_err name))))
         | _ -> L (Array.map xs (fun x -> L [|x|])))
     | S x -> L (Array.map (String.to_array x) (fun c -> S (Char.to_string c)))
-    | _ -> type_err "flip"
+    | _ -> type_err name
 
 and op_min _ =                  (* min*)
   Rt.push @
@@ -914,6 +922,7 @@ and op_cmp ctxs =               (* cmp *)
   Rt.push @ Z (Xs.compare x y)
 
 and op_sort ctxs =              (* sort *)
+  let name = "sort" in
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
   Rt.push @
@@ -926,7 +935,7 @@ and op_sort ctxs =              (* sort *)
               Rt.call_fn f ctxs;
               match Rt.pop () with
               | Z x -> x
-              | _ -> type_err "sort"))
+              | _ -> type_err name))
     | F _ as f, S x ->
        S (String.of_char_list @
             List.sort (String.to_list x)
@@ -936,8 +945,8 @@ and op_sort ctxs =              (* sort *)
                 Rt.call_fn f ctxs;
                 match Rt.pop () with
                 | Z x -> x
-                | _ -> type_err "sort"))
-    | _ -> type_err "sort"
+                | _ -> type_err name))
+    | _ -> type_err name
 
 and bool_helper ctxs f g s =
   let x = Rt.pop_eval ctxs in
@@ -986,6 +995,7 @@ and op_delist _ =               (* ^ *)
   | _ -> type_err "^"
 
 and op_do ctxs =                (* do *)
+  let name = "do" in
   let f = Rt.pop_get ctxs in
   let x = Rt.pop () in
   match f, x with
@@ -1005,9 +1015,9 @@ and op_do ctxs =                (* do *)
            Rt.call_fn fy ctxs;
            go ()
         | B false -> ()
-        | _ -> failwith "dobutt") in
+        | _ -> failwith name) in
      go ()
-  | _ -> type_err "do"
+  | _ -> type_err name
 
 and op_open _ =                 (* open *)
   let x = Rt.pop () in
