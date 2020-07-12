@@ -1,4 +1,4 @@
-(* parser.re *)
+(* parser.ml *)
 (*
  * This file is public domain as declared by Sturm Mabie
  *)

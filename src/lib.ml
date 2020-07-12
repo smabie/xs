@@ -781,7 +781,7 @@ and op_swap_apply ctxs =        (* $ *)
 and op_type _ =              (* type *)
   Rt.push @
     match Rt.pop () with
-    | Z _  -> Q "Z"
+    | Z _ -> Q "Z"
     | R _ -> Q "R"
     | B _ -> Q "B"
     | S _ -> Q "S"

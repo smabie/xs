@@ -1,4 +1,4 @@
-(* parser.ml *)
+(* rt.ml *)
 (*
  * This file is public domain as declared by Sturm Mabie
  *)
@@ -26,7 +26,7 @@ let fdnum = ref 3
 
 let rec is_oper ts k =
   match ts with
-  | t::ts ->
+  | t :: ts ->
      (match Hashtbl.find t k with
       | Some F { is_oper = x; instrs = _ }  -> x
       | Some _ -> false
@@ -44,7 +44,7 @@ let dup () = push @ peek ()
 
 let rec lookup ts k =
   match ts, k with
-  | t::ts, k ->
+  | t :: ts, k ->
      (match Hashtbl.find t k with
       | Some x -> x
       | None -> lookup ts k)
