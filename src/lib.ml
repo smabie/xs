@@ -1082,7 +1082,7 @@ and op_include ctxs =           (* include *)
   | S x -> Rt.eval ctxs @ Parser.parse @ In_channel.read_all x
   | _ -> type_err "include"
 
-and op_rand ctxs =              (* rand *)
+and op_rand _ =              (* rand *)
   Rt.push @
     match Rt.pop () with
     | Z 0 -> R (Random.float 1.)
