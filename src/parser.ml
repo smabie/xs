@@ -21,20 +21,24 @@ let is_alpha = function | 'a'..'z'|'A'..'Z' -> true | _ -> false
 let ws = take_while is_whitespace
 let sep = (char ';') >>| (fun _ -> Sep)
 
-(* floating point (Float) or integer (Int) value *)
-let number =
-  let dot =
-    peek_char >>=
-      function
-       | Some '.' -> advance 1 >>| fun () -> true
-       | _ -> return false in
-  take_while1 is_digit >>=
-    fun digits ->
-    dot >>= function
-    | false -> return @ Int (int_of_string digits)
-    | true ->
-       take_while1 is_digit >>|
-         fun frac -> Float (float_of_string @ digits ^ "." ^ frac)
+let int = take_while1 is_digit >>| fun x -> Int (int_of_string x)
+
+let float_dec = take_while1 is_digit >>=
+  fun digits ->
+  char '.' *> take_while is_digit
+  >>| fun frac -> Float (float_of_string @ digits ^ "." ^ frac)
+
+let float_dec' = take_while is_digit >>=
+  fun digits ->
+  char '.' *> take_while1 is_digit
+  >>| fun frac -> Float (float_of_string @ digits ^ "." ^ frac)
+
+let float_sci =
+  take_while1 is_digit >>= fun mant ->
+  satisfy (function 'e'|'E' -> true | _ -> false) *>
+  take_while (function '+'|'-' -> true | _ -> false) >>= fun sgn ->
+  take_while1 is_digit >>| fun exp ->
+  Float (float_of_string @ mant ^ "e" ^ sgn ^ exp)
 
 (* identifiers *)
 let ident =
@@ -87,7 +91,8 @@ let expr =
       let fn = char '(' *> expr <* char ')' >>| fun x -> Fn x in
       let infix_fn = char '{' *> expr <* char '}' >>| fun x -> InfixFn x in
       let xs = [comment; str; quote; sep; null; booleans;
-                number; oper; soper; ident; fn; infix_fn] in
+                float_dec; float_dec'; float_sci; int; oper; soper;
+                ident; fn; infix_fn] in
       (many @ ws *> choice xs) <* ws >>| List.to_array) >>=
     fun parsed ->
     peek_char >>= function
